@@ -32,7 +32,7 @@ int main(void){
                 cont = 0;
             }
             else{
-                ch[cont] = c;
+                ch[cont]  = c;
                 cont ++;
             }
         }
