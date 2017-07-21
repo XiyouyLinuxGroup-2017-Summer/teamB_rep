@@ -5,6 +5,7 @@ else
     ab=$1
 fi
 rm a.out
+git pull &
 git add .
 git commit -m $ab
 git push
