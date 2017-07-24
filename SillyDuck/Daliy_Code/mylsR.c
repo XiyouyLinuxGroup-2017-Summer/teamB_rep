@@ -19,7 +19,7 @@
 #include<errno.h>
 #include<math.h>
 
-#define width 80       //行宽
+#define width 120       //行宽
 #define PARAM_NONE 0   //无参
 #define PARAM_a    1   //-a
 #define PARAM_l    2   //-l
@@ -35,7 +35,7 @@ int signino;  //输出节点编号标记
 int  my_strlen(char *sss);  //计算字符串字节数，包括中文处理
 int  part_param(int argcc,char **argvv);   //解析参数
 void get_dirinfo(int flag,char *path);  //得到目录信息
-void sort_pathname(int count,char pathname[600][256]);  //排序文件名
+void sort_pathname(int count,char **pathname);  //排序文件名
 void deal_filename(int flag,char *fullpathname);  //处理完整路径文件名
 void chose_param(int flag,char *name,char *fullpathname);  //根据参数调用函数
 void show_fileinfo(struct stat st,char *name);  //打印文件信息
@@ -99,9 +99,8 @@ void show_fileinfo(struct stat st,char *name)
     time[strlen(time)-1]='\0';         //把字符串尾的\n换成\0
     
     if(signino==1)
-        printf("%8ld %s %3lu %6s %6s %6ld %-s %-s\n",st.st_ino,str,st.st_nlink,psd->pw_name,grp->gr_name,st.st_size,time,name);
-    else
-        printf("%s %3lu %6s %6s %6ld %-s %-s\n",str,st.st_nlink,psd->pw_name,grp->gr_name,st.st_size,time,name);
+        printf("%8ld ",st.st_ino);
+    printf("%s %3lu %6s %6s %6ld %-s %-s\n",str,st.st_nlink,psd->pw_name,grp->gr_name,st.st_size,time,name);
 }
 
 //打印单个文件名，并对齐
@@ -131,8 +130,17 @@ void get_dirinfo(int flag,char *path)
     DIR *dir;
     struct dirent *ptr;
     struct stat st;
-    char pathname[600][256],fullpathname[600][256];
+    char **pathname,**fullpathname;
     int i,j,start,end;
+    int sign_param_r=0;
+    pathname=(char **)malloc(sizeof(char *)*35000);
+    fullpathname=(char **)malloc(sizeof(char *)*35000);
+
+    for(i=0;i<35000;i++)
+    {
+        pathname[i]=(char *)malloc(PATH_MAX+1);
+        fullpathname[i]=(char *)malloc(PATH_MAX+1);
+    }
 
     //获取目录下的文件名，文件总数和最长文件名长度，文件名存在数组pathname中
     dir=opendir(path); // 打开目录，返回DIR*形态的目录流
@@ -140,7 +148,7 @@ void get_dirinfo(int flag,char *path)
     {
         if(errno==13)
         {
-            printf("没有权限%d\n",__LINE__);
+            printf("没有权限\n");
             return;
         }
         my_err("opendir",__LINE__);
@@ -149,8 +157,19 @@ void get_dirinfo(int flag,char *path)
     while((ptr=readdir(dir))!=NULL)   //读取目录项信息，返回struct dirent结构的指针
     {
         if(ptr==NULL)
+        {
+            if(errno==2)
+            {
+                printf("虚拟文件\n");
+                return;
+            }
+            if(errno==13)
+            {
+                printf("没有权限\n");
+                return;
+            }
             my_err("readdir",__LINE__);
-
+        }
         strcpy(pathname[count],ptr->d_name);  //把文件名存入pathname数组里
         pathname[count][strlen(ptr->d_name)]='\0';
 
@@ -174,6 +193,7 @@ void get_dirinfo(int flag,char *path)
         start=-count+1;end=1;
         if(flag!=PARAM_r)
             flag=flag^PARAM_r;
+        sign_param_r=1;
     }
     else
     {
@@ -204,6 +224,7 @@ void get_dirinfo(int flag,char *path)
                 if(strcmp(pathname[abs(i)],".")==0||strcmp(pathname[abs(i)],"..")==0)
                     continue;
             }
+
                 if(lstat(fullpathname[abs(i)],&st)==-1)
                 {
                     if(errno==13)
@@ -214,9 +235,15 @@ void get_dirinfo(int flag,char *path)
                 }
                 if(S_ISDIR(st.st_mode))
                 {
-                    printf("\n=================%s:\n",fullpathname[abs(i)]);
+                    printf("\n%s:\n",fullpathname[abs(i)]);
                     strcat(fullpathname[abs(i)],"/");
+
                     get_dirinfo(flag,fullpathname[abs(i)]);
+
+                    if(sign_param_r==1)
+                    {
+                        flag|=PARAM_r;
+                    }
                     maxlen=maxlen2=0;
                     signino=0;
                     leavelen=width;
@@ -226,12 +253,23 @@ void get_dirinfo(int flag,char *path)
 
         }
     }
-}
+        for(i=0;i<35000;i++)
+        {
+            free(pathname[abs(i)]);
+            free(fullpathname[abs(i)]);
+        }
+
+    
+
+    free(pathname);
+    free(fullpathname);
+ }
+
 //对文件名进行排序，冒泡
-void sort_pathname(int count,char pathname[600][256])
+void sort_pathname(int count,char **pathname)
 {
     int i,j;
-    char t[256];
+    char t[PATH_MAX+1];
 
     for(i=0;i<count;i++)
         for(j=0;j<count-i-1;j++)
@@ -269,7 +307,8 @@ void deal_filename(int flag,char *fullpathname)
 void chose_param(int flag,char *name,char *fullpathname)
 {
     struct stat st;
-    char inodename[50];
+    char *inodename;
+    inodename=(char *)malloc(PATH_MAX+1);
 
     if(lstat(fullpathname,&st)==-1)
     {
@@ -289,7 +328,6 @@ void chose_param(int flag,char *name,char *fullpathname)
         strcat(inodename,name);
     }
 
-
     switch(flag)
     {
         case PARAM_NONE:
@@ -306,6 +344,7 @@ void chose_param(int flag,char *name,char *fullpathname)
                     show_filename(maxlen+9,inodename);
                 else
                     show_filename(maxlen,name);
+                break;
         case PARAM_l:
                 if(name[0]!='.')
                     show_fileinfo(st,name);
@@ -342,7 +381,6 @@ void chose_param(int flag,char *name,char *fullpathname)
         default:
                 break;        
     }
-
 }
 
 //解析参数，得到一个整型的返回值
