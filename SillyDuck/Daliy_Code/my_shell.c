@@ -129,7 +129,7 @@ void handle_shell()
         strcat(shellname,uts.nodename);
         strcat(shellname,"\0");
         get_pwd(pwd);
-        sprintf(str,"\033[1;32m%s\033[0m:%s\033[0m$ ",shellname,pwd);
+        sprintf(str,"\033[1;32m%s\033[0m:\033[1;34m%s\033[0m$ ",shellname,pwd);
         
         //获取输入信息,tab补全,上下翻
         buf=readline(str);
@@ -143,6 +143,7 @@ void handle_shell()
         if(len!=0)
         {
             write(fd,buf,len);
+            write(fd,"\n",1);
         }
         close(fd);
 
@@ -324,7 +325,7 @@ void do_cmd(int argcount,char arglist[100][256])
                 arg[i]=NULL;
             }
         }
-    }
+    } 
 
     if(how==out_redirect2)
     {
@@ -491,7 +492,7 @@ void do_cmd(int argcount,char arglist[100][256])
     //若命令中有&，表示后台执行，父进程直接返回，不等待子进程结束
     if(background==1)
     {
-        printf("[%d]\n",pid);
+        printf("[1] %d\n",pid);
         return ;
     }
 
