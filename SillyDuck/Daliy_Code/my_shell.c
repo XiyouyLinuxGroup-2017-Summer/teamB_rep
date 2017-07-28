@@ -27,8 +27,8 @@
 #define have_pipe       4  //命令中有管道|
 
 void ctrl_c(int signum);
-void my_err(const char *err_string,int line);
 void get_pwd(char *pwd);
+void myhistory();
 void handle_shell();
 void explain_input(char *buf,int *argcount,char arglist[100][256]);  //对输入的命令进行解析
 void do_cmd(int argcount,char arglist[100][256]); //执行命令
@@ -69,10 +69,34 @@ void get_pwd(char *pwd)
     }
 }
 
+//读取myhistory
+void myhistory()
+{
+    int i=0,j;
+    char his[1000][512];
+    FILE *fp;
+
+    fp=fopen("/home/hxll/myhistory","r");
+    if(fp==NULL)
+        perror("fopen");
+    else
+    {
+        while(fgets(his[i],512,fp)!=NULL)
+        {
+            i++;
+        }
+    }
+    fclose(fp);
+    for(j=0;j<i-1;j++)
+        printf("%5d  %s",j+1,his[j]);
+}
+
 //对输入的信息进行整体处理判断
 void handle_shell()
 {
     int i;
+    int fd;
+    int len=0;
     int argcount=0;
     char arglist[100][256];
     char *buf=NULL;
@@ -112,6 +136,16 @@ void handle_shell()
         if(*buf)
             add_history(buf);
         
+        //将输入信息写入history文件中
+        if((fd=open("/home/hxll/myhistory",O_CREAT|O_RDWR|O_APPEND,0644))==-1)
+            perror("open");
+        len=strlen(buf);
+        if(len!=0)
+        {
+            write(fd,buf,len);
+        }
+        close(fd);
+
         //若输入的命令为exit/logout/quit则退出本程序
         if(strcmp(buf,"exit")==0||strcmp(buf,"logout")==0||strcmp(buf,"quit")==0)
             break;
@@ -142,6 +176,13 @@ void handle_shell()
                     strcat(arglist[1],"/");
                 chdir(arglist[1]);
             }
+            continue;
+        }
+
+        //history
+        if(strcmp(arglist[0],"history")==0)
+        {
+            myhistory();
             continue;
         }
 
