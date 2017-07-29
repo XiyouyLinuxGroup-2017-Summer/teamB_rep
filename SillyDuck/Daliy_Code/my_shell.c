@@ -48,9 +48,9 @@ void get_pwd(char *pwd)
     getcwd(truepath,256);
 
     char path[50]="/home/";    
-    struct passwd *pw;
-    pw = getpwuid(getuid());
-    strcat(path,pw->pw_name);
+    struct passwd *psd;
+    psd=getpwuid(getuid());
+    strcat(path,psd->pw_name);
     len=strlen(path);
 
     if(strncmp(path,truepath,len)==0)
@@ -94,10 +94,21 @@ void myhistory()
 //对输入的信息进行整体处理判断
 void handle_shell()
 {
+    struct cd
+    {
+        char pre[256];
+        char cur[256];
+    };
+    struct cd *cddir;
+    cddir=(struct cd *)malloc(sizeof(struct cd));
+    memset(cddir->pre,0,256);
+    memset(cddir->cur,0,256);
+
     int i;
     int fd;
     int len=0;
     int argcount=0;
+    int flag=0;
     char arglist[100][256];
     char *buf=NULL;
 
@@ -108,6 +119,7 @@ void handle_shell()
     char pwd[256];
     char shellname[512];
     char *str=NULL;
+   // char cddir[256]="/home/hxll";
     
     while(1)
     {
@@ -168,14 +180,38 @@ void handle_shell()
         if(strcmp(arglist[0],"cd")==0)
         {
             if(*arglist[1]=='\0'||*arglist[1]=='~')
-                chdir("/home/hxll/");
+            {
+                getcwd(cddir->pre,256);
+                chdir("/home/hxll");
+                getcwd(cddir->cur,256);
+            }
+         
+            else if(*arglist[1]=='-')
+            {
+                if(strlen(cddir->pre)==0)
+                    printf("cd: OLDPWD 未设定\n");
+                else
+                {
+                    chdir(cddir->pre);
+                    strcpy(cddir->pre,cddir->cur);
+                    printf("%s\n",cddir->cur);
+                    getcwd(cddir->cur,256);
+                }
+            }
             else
-            {   
+            {
+                if(lstat(arglist[1],&st)==-1)
+                    printf("cd: %s: 没有那个文件或目录\n",arglist[1]);
                 if(S_ISREG(st.st_mode))
-                    printf("Please input dir!\n");
-                else if(arglist[1][strlen(arglist[1])-1]!='/')
-                    strcat(arglist[1],"/");
-                chdir(arglist[1]);
+                    printf("cd: %s: 不是目录\n",arglist[1]);
+                else
+                {
+                    if(arglist[1][strlen(arglist[1])-1]!='/')
+                        strcat(arglist[1],"/");
+                    getcwd(cddir->pre,256);
+                    chdir(arglist[1]);
+                    getcwd(cddir->cur,256);
+                }
             }
             continue;
         }
@@ -192,6 +228,7 @@ void handle_shell()
     }
     free(buf);
     free(str);
+    free(cddir);
 }
 
 //解析buf中的命令，将结果存入arglist中
