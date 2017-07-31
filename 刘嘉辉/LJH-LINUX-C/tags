@@ -1,0 +1,35 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+MAXROWLEN	my_ls.c	24;"	d	file:
+PARAM_A	my_ls.c	22;"	d	file:
+PARAM_L	my_ls.c	23;"	d	file:
+PARAM_NONE	my_ls.c	21;"	d	file:
+display	my_ls.c	/^void display(int flag, char * pathname)$/;"	f
+display_attribute	my_ls.c	/^void display_attribute(struct stat buf, char  *name)$/;"	f
+display_dir	my_ls.c	/^void display_dir(int  flag_param, char *path)$/;"	f
+display_single	my_ls.c	/^void display_single(char * name) $/;"	f
+g_broadcast_ipaddr	ioctl_net.c	/^unsigned  int  g_broadcast_ipaddr;$/;"	v
+g_eth_name	ioctl_net.c	/^unsigned char  g_eth_name[16];$/;"	v
+g_ipaddr	ioctl_net.c	/^unsigned  int  g_ipaddr;$/;"	v
+g_leave_len	my_ls.c	/^int       g_leave_len =  MAXROWLEN;    \/\/一行剩余长度，用于输出对齐$/;"	v
+g_macaddr	ioctl_net.c	/^unsigned char  g_macaddr[6];$/;"	v
+g_maxlen	my_ls.c	/^int       g_maxlen;                 \/\/存放某目录下最长文件名的长度$/;"	v
+g_subnetmask	ioctl_net.c	/^unsigned  int g_subnetmask;$/;"	v
+getch	getch.c	/^char getch()$/;"	f
+getche	getch.c	/^char getche()$/;"	f
+init_net	ioctl_net.c	/^void init_net(void) {$/;"	f
+main	6-2.c	/^int main ( int argc ,char ** argv[] ) {$/;"	f
+main	chmod.c	/^int main (int argc,char ** argv) $/;"	f
+main	fcntl_access.c	/^int main () $/;"	f
+main	getch.c	/^int main () {$/;"	f
+main	my_ls.c	/^int main (int argc, char **argv) {$/;"	f
+main	my_rwi.c	/^int  main (){$/;"	f
+main	perror.c	/^int main (int argc,char ** argv[]) {$/;"	f
+my_err	fcntl_access.c	/^void my_err(const char * err_string,int line) {$/;"	f
+my_err	my_ls.c	/^void my_err( const char *err_string, int  line ) {$/;"	f
+my_err	my_rwi.c	/^void my_err (const char * err_string,int line)$/;"	f
+my_read	my_rwi.c	/^int my_read (int fd) $/;"	f
