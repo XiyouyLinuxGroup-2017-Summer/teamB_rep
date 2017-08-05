@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include<stdio.h>
-#include</home/holy666/mk/mm.c>
+#include "mm.c"
 int main()
 {
     double a,b,c;
