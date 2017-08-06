@@ -1,12 +1,8 @@
-CC = gcc
-DLIBS = -lm
+LIBS=-lm
+CC=gcc
+OBJS=count
 
-count:main.o jisuan.o
-	$(CC) -o count main.o jisuan.o $(DLIBS)
-main.o:main.c jisuan.h
-	$(CC) -c main.c
-jisuan.o:jisuan.h
-	$(CC) -c jisuan.c
-
-clean:
-	rm count main.o jisuan.o
+all:
+	$(CC) -S ./*.c
+	$(CC) -c ./*.s
+	$(CC) -o $(OBJS) ./*.o $(LIBS)
