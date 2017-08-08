@@ -27,7 +27,7 @@
 #define out_redirect     1  //输出重定向
 #define in_redirect      2  //输入重定向
 #define have_pipe        3  //命令中有管道
-
+#define out_redirect2     4   // >>   
 struct passwd *pw;  //用户信息结构体  
 
 
@@ -206,16 +206,6 @@ void do_cmd(int argcount, char arglist[100][256],int *history_count,char  histor
                 chdir("/home/holy666/");
                 strcpy(path,"/home/holy666/"); 
             }
-       /*     else if( argcount = 2  && strcmp(arglist[1], "~"      )==0 )
-            {    
-                chdir("/home/holy666/");
-                strcpy(path,"/home/holy666/");
-            }
-            else {
-                printf("chdir\n");
-                chdir(arglist[1]);
-                strcpy(path,arglist[1]);          
-            }*/
             if (argcount == 2){
                 if (strcmp(arglist[1], "~") == 0 ){
                     chdir("/home/holy666/");
@@ -275,14 +265,21 @@ void do_cmd(int argcount, char arglist[100][256],int *history_count,char  histor
             flag++;
             how = in_redirect;
             if (i == 0)
-                flag++;
+            
+            flag++;
+        }
+        if (strcmp(arg[i] , ">>") == 0 )
+        {
+            flag++;
+            how = out_redirect2;
+            if (i==0) 
+            flag++;
+
         }
         if ( strcmp(arg[i] , "|") == 0 )
         {
             flag++;
             how = have_pipe;
-            if (arg[i+1] == NULL)
-                flag++;
             if(i==0)
                 flag++;
         }    
@@ -302,6 +299,16 @@ void do_cmd(int argcount, char arglist[100][256],int *history_count,char  histor
                 arg[i] = NULL;
             }
     }
+    if (how == out_redirect2)
+    {
+        for(i=0; arg[i] != NULL; i++)
+            if (strcmp(arg[i], ">>" ) == 0)
+            {
+                file = arg[i+1];
+                arg[i] = NULL;
+            }
+    }
+
     if (how == in_redirect)
     {
         for(i=0; arg[i] != NULL; i++)
@@ -312,7 +319,6 @@ void do_cmd(int argcount, char arglist[100][256],int *history_count,char  histor
             }
     }
     int k=0;
-   // for (k; k<count ; k++  )
 
     if (how == have_pipe)      //管道文件 
         for(i=0 ;arg[i] != NULL; i++)
@@ -382,11 +388,25 @@ void do_cmd(int argcount, char arglist[100][256],int *history_count,char  histor
                     exit(0);              
                 }
             fd = open (file, O_RDWR|O_CREAT|O_TRUNC,0644);
-            dup(2);
+            dup2(fd,1);
             execvp(arg[0],arg);
             exit(0);
             }
             break;
+        case 4 :
+            if (pid == 0)
+            {
+                if (!  (find_command(arg[0])))
+                {
+                    printf("%s : command not found !\n",arg[0]);
+                    exit(0); 
+                }
+            fd = open (file , O_APPEND|O_RDWR,0644);
+            dup2(fd , 1);
+
+            execvp(arg[0],arg);
+            exit(0);
+            }
         case 2:
             if (pid == 0)
             {
@@ -396,7 +416,8 @@ void do_cmd(int argcount, char arglist[100][256],int *history_count,char  histor
                     exit(0); 
                 }
             fd = open(file, O_RDONLY);
-            dup2(fd ,2);
+            dup2(fd ,0);
+            execvp(arg[0],arg);
             exit(0);
             }
             break;
