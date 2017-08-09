@@ -22,7 +22,7 @@ A.基础要求
 B.拓展要求
 I/O多路复用技术（select/epoll）
 数据交互采用JSON格式
-图形化显示（opengl、QT、GTK）
+图形化显示（opengl、QT、GTK、curses）
 数据加密（密码、消息）
 文件断点续传
 大文件传输
