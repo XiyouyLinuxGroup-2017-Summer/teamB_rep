@@ -1,0 +1,74 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CN	client.c	/^MES *CN;$/;"	v
+MAXLINE	client.c	17;"	d	file:
+MAXLINE	server.c	11;"	d	file:
+MES	client.c	/^}MES;$/;"	t	typeref:struct:message	file:
+MES	server.c	/^}MES;$/;"	t	typeref:struct:message	file:
+USA	client.c	/^}USA;$/;"	t	typeref:struct:User_list	file:
+USA	server.c	/^}USA;$/;"	t	typeref:struct:User_list	file:
+User_list	client.c	/^typedef struct User_list$/;"	s	file:
+User_list	server.c	/^typedef struct User_list$/;"	s	file:
+add_list	client.c	/^void add_list(char *num ,int n)$/;"	f
+add_list	server.c	/^void add_list(char *name,int  connfd)$/;"	f
+chat_to_one	client.c	/^void chat_to_one()$/;"	f
+chose_mode	client.c	/^int  chose_mode()$/;"	f
+client	server.c	/^void*  client(void *arg)$/;"	f
+client_center	client.c	/^void client_center()$/;"	f
+conn	server.c	/^MYSQL *conn;$/;"	v
+create_friend_table	server.c	/^void  create_friend_table(char *name)$/;"	f
+detail	client.c	/^        char detail[255];    $/;"	m	struct:message	file:
+detail	server.c	/^        char detail[255];    $/;"	m	struct:message	file:
+fd	server.c	/^    int fd;$/;"	m	struct:User_list	file:
+friend_list_init	client.c	/^int  friend_list_init()$/;"	f
+friend_list_init	server.c	/^void  friend_list_init(int connfd,char num[20])$/;"	f
+from	client.c	/^        char from[20];$/;"	m	struct:message	file:
+from	server.c	/^        char from[20];$/;"	m	struct:message	file:
+from_num	client.c	/^char from_num[20];\/\/$/;"	v
+get_one_chat	client.c	/^void get_one_chat(MES PACK)$/;"	f
+get_passd	client.c	/^void get_passd(char *passd)$/;"	f
+head	client.c	/^USA *head= NULL;$/;"	v
+head	server.c	/^USA *head= NULL;$/;"	v
+main	client.c	/^int main(int argc, char** argv)$/;"	f
+main	server.c	/^int main(int argc, char** argv)$/;"	f
+match	server.c	/^int  match(MES *a,int connfd)$/;"	f
+message	client.c	/^typedef struct message$/;"	s	file:
+message	server.c	/^typedef struct message$/;"	s	file:
+mode	client.c	/^        int mode;\/\/模式$/;"	m	struct:message	file:
+mode	server.c	/^        int mode;\/\/模式$/;"	m	struct:message	file:
+mun	client.c	/^        int  mun;$/;"	m	struct:message	file:
+mun	server.c	/^        int mun;$/;"	m	struct:message	file:
+my_err	client.c	/^void my_err(const char *err_string,int line)$/;"	f
+my_err	server.c	/^void my_err(const char *err_string,int line)$/;"	f
+my_num	client.c	/^char my_num[20];$/;"	v
+n	client.c	/^    int   n;$/;"	m	struct:User_list	file:
+next	client.c	/^        struct message *next;$/;"	m	struct:message	typeref:struct:message::message	file:
+next	client.c	/^    struct User_list *next;$/;"	m	struct:User_list	typeref:struct:User_list::User_list	file:
+next	server.c	/^        struct message *next;$/;"	m	struct:message	typeref:struct:message::message	file:
+next	server.c	/^    struct User_list *next;$/;"	m	struct:User_list	typeref:struct:User_list::User_list	file:
+num	client.c	/^        char num[20];\/\/账号$/;"	m	struct:message	file:
+num	client.c	/^    char num[20];$/;"	m	struct:User_list	file:
+num	server.c	/^        char num[20];\/\/账号$/;"	m	struct:message	file:
+num	server.c	/^    char num[20];$/;"	m	struct:User_list	file:
+only_recv	client.c	/^void only_recv(void)$/;"	f
+passd	client.c	/^        char passd[20];$/;"	m	struct:message	file:
+passd	server.c	/^        char passd[20];$/;"	m	struct:message	file:
+private_chat	client.c	/^void  private_chat()$/;"	f
+private_chat	server.c	/^void  private_chat(MES PACK)$/;"	f
+sam_next	client.c	/^        struct message *sam_next;$/;"	m	struct:message	typeref:struct:message::message	file:
+sam_next	server.c	/^        struct message *sam_next;$/;"	m	struct:message	typeref:struct:message::message	file:
+select_fri	client.c	/^int   select_fri(void)$/;"	f
+send_num	client.c	/^char send_num[20];\/\/$/;"	v
+serv_fd	client.c	/^int serv_fd;\/\/$/;"	v
+server_center	server.c	/^void server_center(int  connfd)$/;"	f
+show_fri_list	client.c	/^void  show_fri_list()$/;"	f
+sign_in_register	client.c	/^void sign_in_register(int mode)$/;"	f
+start	client.c	/^int start()$/;"	f
+state	client.c	/^        int state;\/\/状态$/;"	m	struct:message	file:
+state	server.c	/^        int state;\/\/状态$/;"	m	struct:message	file:
+to	client.c	/^        char to[20];$/;"	m	struct:message	file:
+to	server.c	/^        char to[20];$/;"	m	struct:message	file:
