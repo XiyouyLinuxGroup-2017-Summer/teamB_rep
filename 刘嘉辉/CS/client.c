@@ -26,11 +26,12 @@ typedef struct message
         char from[20];
         char detail[255];    
         int  mun;
-        struct message *next;
-        struct message *sam_next;
 
 
 }MES;
+
+
+
 
 typedef struct User_list
 {
@@ -40,12 +41,21 @@ typedef struct User_list
 
 }USA;
 USA *head= NULL;
-MES *CN;
+typedef struct MES_box{
+    int  n;
+    MES PACK;
+    int  flag;
+    struct  MES_box  *next;
+}BOX ;
+
+
+BOX  *HEAD = NULL;
+
+
 
 int serv_fd;//
 
 char send_num[20];//
-char from_num[20];//
 char my_num[20];
 
 
@@ -57,20 +67,35 @@ void my_err(const char *err_string,int line)
     exit(1);
 }
 
-int start();
+int  start();
 int  chose_mode();
 void sign_in_register(int mode);
 void get_passd(char *passd);
 void get_one_chat(MES  PACK);
-void add_list(char *num,int n);
-void  private_chat(void);
-void  show_fri_list();
+void add_list(char *num);
+void private_chat(void);
+void show_fri_list();
 int  friend_list_init(MES PACK);
-int   select_fri(void);
-int   select_fri(void)
+int  select_fri(void);
+void list_friend_add();
+void chat_to_one();
+void client_center();
+void Box_mes_append(MES PACK);//将此消息添加至消息盒子
+void search_friend();
+int  fri_repeat(char *name);
+void  mess_box_solve();  //消息执行
+void mess_box_center();  //消息盒子处理
+void mess_box_view();    //消息盒子预览
+void   friend_request(MES PACK);//好友请求的处理
+/****************************************************************************************/
+
+
+
+int   select_fri(void)//选择好友进行聊天
 {
     int  n;
     USA *temp = head->next;
+    memset(&send_num,0,sizeof(send_num));
     printf("请输入你要选择的好友序号\n");
     scanf("%d",&n);
     while(temp != NULL) {
@@ -88,13 +113,117 @@ int   select_fri(void)
     }   
 
 }
-void  show_fri_list()
+void  friend_request(MES PACK)//好友请求的处理
+{
+    char str[20];
+    int  sel;
+    while(1){
+        printf("请输入 1,0 来回复好友请求: \n");
+        //scanf("%d",&sel);
+        sel = chose_mode();
+        printf("sel = %d\n",sel);
+        if(sel == 1 || sel ==0 ) break;
+    
+    }
+    if (sel==1){
+        PACK.state = 1;
+    } else if(sel ==0){
+        PACK.state = 0;
+    } 
+    //调换 from,to 顺序
+    printf("你的选择是sel ===%d",PACK.state);
+    strcpy( str, PACK.from);
+    memset( &PACK.from, 0, sizeof(PACK.from));
+    memset( &PACK.to, 0, sizeof(PACK.to));
+    strcpy( PACK.from, my_num);
+    strcpy( PACK.to,  str);
+    //发射
+    printf(" ==%s== %s*****state=%d@@@\n",PACK.to,PACK.from, PACK.state );
+    
+    if(send(serv_fd,&PACK,sizeof(PACK),0) < 0) {
+        my_err("send",__LINE__);
+        exit(0);
+    }
+
+}
+int  fri_repeat(char *name)//判断好友重复
+{
+    USA *temp;
+    temp = head->next;
+    while(temp!= NULL)
+    {
+        if (strcmp(name,temp->num)==0 )
+            return 1;
+    temp= temp->next;
+    }
+    if(temp== NULL) return 0;
+}
+
+
+void search_friend()//添加好友大功能
+{
+    char name[20];
+    MES PACK;
+    printf("请输入你要添加的好友ID\n");
+    scanf("%s",name);
+    printf("%s\n", name);
+    if (fri_repeat(name)){
+        printf("不能重复添加\n");
+
+    }else if(strcmp(name,my_num) == 0) {
+        printf("添加自己干嘛？？？\n");
+    }else if (strcmp(name,my_num) != 0 ){
+        memset(&PACK,0,sizeof(PACK));
+        strcpy(PACK.from,my_num);
+        strcpy(PACK.to ,name);
+        PACK.mode = 8;
+        PACK.state = -1;
+        
+        if(send(serv_fd,&PACK,sizeof(PACK),0) < 0) {
+            my_err("send",__LINE__);
+            exit(0);
+        }
+        printf("全局变量%s",my_num);
+        printf("===%s\n", name);
+        printf("已发送请求请稍后\n");
+    }
+
+
+
+}
+
+void list_friend_add()
+{
+    printf("1.摇一摇\n");
+    printf("2.扫一扫\n");
+    printf("3.返回主界面");
+    int  sel;
+    do{
+        sel = chose_mode();
+    }while(sel<1||sel>3);
+    switch(sel){
+        case 1:
+            // list_all();
+            list_friend_add();
+            break;
+        case 2:
+            search_friend();
+            list_friend_add();
+            break;
+        case 3:
+            break;
+    }
+}
+
+void  show_fri_list()//打印好友列表
 {
     USA  *temp;
     temp = head->next;
     char  cnt;
+    int  n=0;
     while (temp != NULL)
     {
+        temp->n = (++n);
         printf("%d. %s\n",temp->n,temp->num);
         temp = temp->next;
     }
@@ -103,22 +232,30 @@ void  show_fri_list()
 
     system("clear");
 }
-void chat_to_one();
 void chat_to_one()
 {
     MES PACK;
     printf("---enter to send--\n");
     printf("---quit  to leave-\n");
+    getchar();
     while(1)
     {   
+        memset(& PACK.detail, 0 , sizeof(PACK.detail) );
         gets(PACK.detail);
+        printf("detail = %s\n",PACK.detail);
         if (strcmp(PACK.detail,"quit")== 0)
             break;
 
         setbuf(stdin,NULL);
         PACK.mode = 3;
+        
+        printf("my_num  %s \n",my_num);
+        puts("");
         strcpy(PACK.from,my_num);
+        
         strcpy(PACK.to,send_num);
+        
+        printf("PACK. from=%s***,send_num= %s*** ",PACK.from,send_num);
         if(send(serv_fd,&PACK,sizeof(PACK),0) < 0) {
             my_err("send",__LINE__);
             exit(0);
@@ -130,8 +267,8 @@ void  private_chat()
 {
     int sel,a;
     MES PACK;
-    printf("1.haoyouliebiao\n");
-    printf("2.xuanzehaoyou siliao\n");
+    printf("1.好友列表\n");
+    printf("2.选择好友聊天\n");
     printf("3.exit\n");
     printf("4.\n");
     do{
@@ -144,7 +281,7 @@ void  private_chat()
             private_chat();
             break;
         case 2:
-            a = select_fri();
+            a = select_fri();//选择好友聊天
             if(a)  chat_to_one();
             else   private_chat();
             
@@ -153,24 +290,23 @@ void  private_chat()
             break;
     }
 }
-void add_list(char *num ,int n)
+void add_list(char *num)//添加至好友列表
 {
     USA *temp;
     temp = (USA *)malloc(sizeof(USA));
     strcpy(temp->num ,num);
-    temp->n = n;
     temp->next = head->next;
     head->next = temp;
 }
-int  friend_list_init(MES PACK)
+int  friend_list_init(MES PACK)//更新好友列表
 {
-
-    int  n =0,mun=0;
+    printf("friend_list_init \n");
+    int mun=0;
     do{
 
 
         if (mun == PACK.mun) break;
-        add_list(PACK.num,++n);
+        add_list(PACK.num);
     }while(++mun);
     return  mun;
 }
@@ -178,21 +314,29 @@ void get_one_chat(MES PACK)
 {
     if(strcmp(PACK.from,send_num) == 0){
         //如果是当前用户则直接输出
-        printf("\t\t%s",PACK.detail);
-        printf(" ** from **%s",PACK.from);
+        printf("%s",PACK.detail);
+        printf("**from**%s**",PACK.from);
         puts("");
     }else{
         if(PACK.state == -1) {
             puts("对方不在线!");
         } else{
             printf("%s发来一条消息,请到消息盒子处理\n",PACK.from);
-            //add_mhead(PACK);
-        }
+            Box_mes_append(PACK);
         //不是当前聊天的用户就放进消息盒子
+        }
     }
 }
 
-
+void Box_mes_append(MES PACK)//将此消息添加至消息盒子
+{
+    BOX *temp;
+    temp = (BOX *)malloc(sizeof(BOX));
+    
+    temp ->PACK = PACK;
+    temp->next = HEAD->next;
+    HEAD->next = temp;
+}
 //只用来接收信息的子线程
 void only_recv(void)
 {
@@ -200,8 +344,15 @@ void only_recv(void)
     while(1) {
         MES PACK;
         memset(&PACK,0,sizeof(MES));
-        int re;
+        int re =0;
+        while (re != sizeof(PACK)){
         re = recv(serv_fd,&PACK,sizeof(PACK),0);
+        }
+        
+        
+        
+        
+        printf("PACK.mode =  %d, PACK.num= %s\n ",PACK.mode,PACK.num);
         if(re == 0) {
             puts("服务器开始维护,你已断开连接!");
             exit(0);
@@ -220,35 +371,28 @@ void only_recv(void)
              break;
         case 5:
             // //附近的人
-            // List_Add(PACK);
+            // add_friend(PACK);
              break;
         case 6:
-            // //我的好友
-            // if(PACK.resault == -1) {
-            //     puts(GREEN"你没有好友,快去附近的人添加吧!"WHITE);
-            // }
-            // List_Add(PACK);
-             break;
         case 7:
             // //我的群
             // if(PACK.resault == -1) {
-            //     puts(GREEN"你没有群,快去创建或者让好友邀请你吧!"WHITE);
+            //     puts("你没有群,快去创建或者让好友邀请你吧!"WHITE);
             // }
             // List_Add(PACK);
              break;
         case 8:
             //加好友
-            // if(PACK.resault==-1) {
-            //     printf(BLUE"\t%s请求加你为好友,请到消息盒子处理\n"WHITE,PACK.from);
-            //     add_mhead(PACK);
-            // } else if(PACK.resault == 0) {
-            //     printf(RED"%s拒绝了你的好友请求\n"WHITE,PACK.to);
-            // } else if(PACK.resault == 1) {
-            //     printf(RED"%s同意了你的好友请求\n"WHITE,PACK.to);
-            // } else if(PACK.resault == -2) {
-            //     printf(RED"%s已是你的好友,无需再次添加\n"WHITE,PACK.to);
-            // }
-            // sleep(1);
+            if(PACK.state==-1) {
+                printf("\t%s请求加你为好友,请到消息盒子处理\n",PACK.from);
+                //添加至消息盒子 
+                 Box_mes_append(PACK);
+            } else if(PACK.state == 0) {
+                printf("%s拒绝了你的好友请求\n",PACK.from);
+            } else if(PACK.state == 1) {
+                printf("%s同意了你的好友请求\n",PACK.from);
+            }
+            sleep(1);
             break;
         case 9:
             //加群
@@ -287,32 +431,117 @@ void only_recv(void)
             // List_Add(PACK);
             break;
         case 19:
-            
-              friend_list_init(PACK);
-            // printf("系统消息:%s\n"WHITE,PACK.detail);
+            //printf("19999\n");
+            //sleep(19);
+            friend_list_init(PACK);//好友列表的更新
             break;
         }
     }
 }
 
-void client_center();
+void mess_box_view()//消息盒子预览
+{
+    int  y=0;
+    BOX *temp;
+    temp = HEAD->next;
+    while(temp != NULL)
+    {
+        temp->n = (++y);
+        temp->flag = 0;
+        printf("%d. %s的消息请处理\n",y ,temp->PACK.from );
+    temp = temp->next;    
+    }
+
+           
+}
+void  mess_box_solve()//消息执行
+{
+    int  sel; 
+    BOX *temp;
+    temp = HEAD->next;
+    printf("请输入你要选择的消息序号\n");
+    sel = chose_mode();
+    
+    while(temp != NULL)
+    {
+        if(temp->n == sel){
+            printf("%d. %s的消息请处理\n",temp->n ,temp->PACK.from );    
+            break;
+        }
+    temp = temp->next;
+    }
+    switch (temp->PACK.mode){
+        case  3:
+            //读取消息
+            //sleep(2);
+            printf("%s",temp->PACK.detail);
+            printf("---from--%s<-",temp->PACK.from);
+            puts("");
+            printf("本条处理完毕\n");
+            break;
+        case  4:    
+            //群聊消息
+            //sleep(2);
+            printf("本条处理完毕\n");
+            break;
+        case 8:
+            //好友请求
+            friend_request(temp->PACK);//好友请求的处理         &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7
+            //sleep(2);
+            printf("本条处理完毕\n");
+            break;
+        case 9:
+            //群请求
+            //sleep(2);
+            printf("本条处理完毕\n");
+            break;
+    }   
+
+
+}
+void mess_box_center()//消息盒子处理中心
+{
+    int n =0,sel;
+    
+
+    printf("1.待处理消息列表\n");
+    printf("2.选择消息并处理\n");
+    printf("3.退出消息盒子\n");
+    do{
+        sel = chose_mode();
+    }while(sel<1 || sel >3);
+    switch(sel){
+        case 1:
+            mess_box_view();//消息盒子预览
+            mess_box_center();
+            break;
+        case 2:
+            mess_box_solve();//消息执行
+            mess_box_center();
+            break;
+        case 3:
+            break;
+   }
+
+}
 void client_center()
 {
     int  mun;
-    printf("1.yaoyiyao");
-    printf("2.我的好友");
-    printf("3.我的群");
-    printf("4.消息盒子");
-    printf("5.创建群");
-    printf("6.退出登陆");
+    printf("1.摇一摇\n");
+    printf("2.我的好友\n");
+    printf("3.我的群\n");
+    printf("4.消息盒子\n");
+    printf("5.创建群\n");
+    printf("6.退出登陆\n");
     int sel;
     do{
         sel=chose_mode();
+        printf("main thread sel = %d\n",sel);
     }while(sel<1||sel>7);
     switch(sel) {
     case 1:    
         //all_list_init();
-        //
+        list_friend_add();
         client_center();
         break;
     case 2:
@@ -326,7 +555,7 @@ void client_center()
         client_center();
         break;
     case 4:
-        //mess_box();
+        mess_box_center();//消息盒子处理
         client_center();
         break;
     case 5:
@@ -367,7 +596,8 @@ void sign_in_register(int mode)
     memset(&name,0,sizeof(name)); 
     printf("zhanghao :");
     scanf("%s",PACK.num);
-    strcmp(name,PACK.num);
+    strcpy(name,PACK.num);
+    printf("name = %s",name);
     if (mode == 1){
         printf("mima :");
         get_passd(PACK.passd);
@@ -400,10 +630,11 @@ void sign_in_register(int mode)
     printf("mode=%d state=%d\n", PACK.mode,PACK.state);
     if ( PACK.mode==1 && PACK.state == 1) {
         printf("success in\n");
-        printf("正在加载...");
-        sleep(2);
+       // printf("正在加载...");
+       // sleep();
         strcpy(my_num,name);
-        system("clear");
+
+       // system("clear");
         
             pthread_t thid;
             pthread_create(&thid,NULL,(void*)only_recv,NULL);
@@ -416,7 +647,7 @@ void sign_in_register(int mode)
         printf("success register\n");
         //system("clear");
         //client_center();
-    }else if( PACK.mode==1 && PACK.state != 1) {
+    }else if( PACK.mode==2 && PACK.state != 1) {
         printf("register failed\n");
         //system("clear");
     }
@@ -461,6 +692,11 @@ int main(int argc, char** argv)
     struct sockaddr_in    servaddr;
     head = (USA *)malloc(sizeof(USA));
     head->next = NULL;
+    //消息盒子的初始化 
+
+    HEAD = (BOX *)malloc(sizeof(BOX));
+    HEAD->next = NULL;
+    
     if( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
     printf("create socket error: %s(errno: %d)\n", strerror(errno),errno);
     exit(0);
