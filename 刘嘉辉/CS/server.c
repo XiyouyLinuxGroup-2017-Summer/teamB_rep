@@ -9,7 +9,7 @@
 #include<pthread.h>
 #include<mysql/mysql.h>
 #define MAXLINE 4096
-
+//切记两边的结构体要完全相同！！！！！！！！！！！！！！！！！！！！！！！！
 typedef struct message
 {
         int mode;//模式
@@ -19,9 +19,8 @@ typedef struct message
         char to[20];
         char from[20];
         char detail[255];//消息内容    
+        char  time_mes[50];
         int mun;
-        struct message *next;
-        struct message *sam_next;
 
 
 }MES;
@@ -43,13 +42,22 @@ int  match(MES *a,int connfd);
 void server_center(int  connfd);
 void my_err(const char *err_string,int line);
 void  private_chat(MES PACK);
-void  friend_list_init(int connfd,char num[20]);
+void  friend_list_init(int connfd);
 void  create_friend_table(char *name);
 void add_list(char *name,int connfd);
+void logout(int connfd);//退出登陆
+void    del_fd(int   connfd);//将次节点从登录链表中删除
 void  save_in_mysql(MES PACK);//保存离线消息
+void  leave_mess(int connfd,char * name);//离线消息的处理
 int  search_friend(char * num);// 在数据库中查找是否有这个用户
 int  online_fri(char* num); //根据用户ID号进性查询好友是否在线  
 
+void  select_message_log(MES PACK,int connfd);
+void   save_message_log (MES PACK);//保存聊天记录
+void  create_message_log(char *fri_1,char *fri_2);  //添加好友成功时 创建聊天记录表
+void  group_friend_append(char*from,char *name);//添加好友信息至数据库中   
+void  group_create_mes_log(char *from,char *name);//创建聊天记录的表格
+void  group_chat(MES PACK);//处理群消息 
 /****************************************************************************************/
 
 void add_list(char *name,int  connfd)
@@ -67,8 +75,8 @@ void  create_friend_table(char *name)
 {
     char sql[200] ;
     int res;//执行sql语句后的返回标志
-    sprintf(sql,"CREATE TABLE friend_%s (name char(20));",name);
-    printf("sql = %s\n",sql);
+    sprintf(sql,"CREATE TABLE friend_%s (name varchar(20));",name);
+    printf("注册账户成功  sql = %s\n",sql);
     res = mysql_query(conn,sql);//正确返回0
     if(res) {
         perror("my_query");
@@ -77,21 +85,95 @@ void  create_friend_table(char *name)
     } 
 
 }
-void  friend_list_init(int connfd,char num[20])
+char *select_name(int fd)
+{
+    USA *temp;
+    temp = head->next;
+    while(temp != NULL)
+    {
+        if (fd == temp->fd) break;
+    temp = temp->next;
+    }
+    return temp->num;
+
+
+}
+void  friend_list_init(int connfd)//发送好友列表
 {
     int res;//执行sql语句后的返回标志
     MYSQL_RES *res_ptr;//指向查询结果的指针
     MYSQL_FIELD *field;//字段结构指针
     MYSQL_ROW result_row;//按行返回查询信息
     int row,column;//查询返回的行数和列数
-
+    char num[20];
     int i,j;
 
     MES  PACK;
     char  sql[200];
+    
+    //根据fd去链表查名字
+
+     strcpy (num , select_name(connfd));
+    
     sprintf(sql,"SELECT name FROM friend_%s",num);
      //查询
-    printf("==%s\n",sql);
+
+
+    res = mysql_query(conn,sql);//正确返回0
+    if(res) {
+        perror("my_query");
+        mysql_close(conn);
+        exit(0);
+    } else{
+        //把查询结果给res_ptr
+        res_ptr = mysql_store_result(conn);
+        //如果结果不为空,则输出
+        if(res_ptr) {
+            column = mysql_num_fields(res_ptr);
+            row = mysql_num_rows(res_ptr);
+           // 输出结果的字段名
+             puts("");
+           // 按行输出结果
+            for(i = 1;i < row+1;i++){
+                result_row = mysql_fetch_row(res_ptr);
+                for(j = 0;j< column;j++) {
+                    memset(&PACK,0,sizeof(PACK));
+                
+                    
+                    PACK.mode = 19;
+                    strcpy( PACK.num  ,result_row[j]);
+                    
+                    PACK.mun = row;
+                    if(send(connfd,&PACK,sizeof(PACK),0) < 0) {
+                        my_err("send",__LINE__);
+                    } 
+                }
+                puts("");
+            }
+
+        }
+    }       
+}
+void  group_list_init(int connfd)//发送QUN列表
+{
+    int res;//执行sql语句后的返回标志
+    MYSQL_RES *res_ptr;//指向查询结果的指针
+    MYSQL_FIELD *field;//字段结构指针
+    MYSQL_ROW result_row;//按行返回查询信息
+    int row,column;//查询返回的行数和列数
+    char num[20];
+    int i,j;
+
+    MES  PACK;
+    char  sql[200];
+    
+    //根据fd去链表查名字
+
+    strcpy (num , select_name(connfd));
+    
+
+    sprintf(sql,"SELECT name FROM my_group_%s",num);
+     //查询
 
 
     res = mysql_query(conn,sql);//正确返回0
@@ -121,15 +203,71 @@ void  friend_list_init(int connfd,char num[20])
                     memset(&PACK,0,sizeof(PACK));
                 
                     
-                    PACK.mode = 19;
+                    PACK.mode = 18;
                     strcpy( PACK.num  ,result_row[j]);
                     
-                    PACK.mun = row;
-                    printf("mode = %d, num = %s, row = %d\n",PACK.mode, PACK.num, row);    
+                    printf("mode = %d, group_name = %s, row = %d\n",PACK.mode, PACK.num, row);    
                     if(send(connfd,&PACK,sizeof(PACK),0) < 0) {
                         my_err("send",__LINE__);
                     } 
                 }
+                puts("");
+            }
+
+        }
+    }       
+}
+void  leave_mess(int  connfd,char *name )//离线消息的处理
+{
+    int res;//执行sql语句后的返回标志
+    MYSQL_RES *res_ptr;//指向查询结果的指针
+    MYSQL_FIELD *field;//字段结构指针
+    MYSQL_ROW result_row;//按行返回查询信息
+    int row,column;//查询返回的行数和列数
+
+    int i,j;
+
+    MES  PACK;
+    char  sql[200];
+    sprintf(sql,"SELECT *  FROM offline_mes where ot = '%s';",name);
+     //查询
+    printf("==%s\n",sql);
+
+
+    res = mysql_query(conn,sql);//正确返回0
+    if(res) {
+        perror("my_query");
+        mysql_close(conn);
+        exit(0);
+    } else{
+        //把查询结果给res_ptr
+        res_ptr = mysql_store_result(conn);
+        //如果结果不为空,则输出
+        if(res_ptr) {
+            column = mysql_num_fields(res_ptr);
+            row = mysql_num_rows(res_ptr);
+            printf("查到%d行\n",row);
+           // 输出结果的字段名
+            for(i = 0;field = mysql_fetch_field(res_ptr);i++) {
+                printf("%10s",field->name);
+            }
+             puts("");
+           // 按行输出结果
+            for(i = 1;i < row+1;i++){
+                result_row = mysql_fetch_row(res_ptr);
+   //             printf("column = %d\n",column);
+                    memset(&PACK,0,sizeof(PACK));
+                
+                PACK.mode = atoi( result_row[0]);
+                PACK.state = atoi(result_row[1]);
+                strcpy( PACK.from,result_row[2]);
+                strcpy(PACK.to , result_row[3]);
+                strcpy(PACK.detail,result_row[4]);
+ //               printf("%d,%d,%s,%s,%s\n " ,PACK.mode,PACK.state,PACK.from,PACK.to,PACK.detail); 
+                
+                     if(send(connfd,&PACK,sizeof(PACK),0) < 0) {
+                         my_err("send",__LINE__);
+                    } 
                 puts("");
             }
 
@@ -146,8 +284,31 @@ void  save_in_mysql(MES PACK)//保存离线消息
     sprintf(sql,"INSERT INTO offline_mes  VALUES(%d,%d,'%s','%s','%s');",PACK.mode,PACK.state,PACK.from,PACK.to,PACK.detail);
     res = mysql_query(conn,sql);//正确返回0
     res_ptr = mysql_store_result(conn);
-    printf("==%s",sql);
+//    printf("==%s",sql);
 }
+void   save_message_log (MES PACK)//保存聊天记录
+{
+   
+    int res;//执行sql语句后的返回标志
+    MYSQL_RES *res_ptr;//指向查询结果的指针
+    char  time_mes[20];
+    strcpy(time_mes, "66666");
+    char  sql[200];
+    sprintf(sql,"INSERT INTO %s_to_%s  VALUES('%s','%s','%s');",PACK.from,PACK.to, PACK.from,PACK.detail,time_mes);
+    res = mysql_query(conn,sql);//正确返回0
+    res_ptr = mysql_store_result(conn);
+  //  printf("==%s",sql);
+    
+    memset(&sql,0,sizeof(sql));
+    sprintf(sql,"INSERT INTO %s_to_%s  VALUES('%s','%s','%s');",PACK.to,PACK.from, PACK.from,PACK.detail,time_mes);
+    res = mysql_query(conn,sql);//正确返回0
+    res_ptr = mysql_store_result(conn);
+  //  printf("==%s",sql);
+
+
+}
+
+
 void  private_chat(MES PACK)
 {
     int   recv_fd;
@@ -166,7 +327,10 @@ void  private_chat(MES PACK)
 
     if (flag){
         
-          printf("在线消息\n");   //save_in_mysql(PACK);
+          printf("在线消息\n");   
+        // 保存聊天记录
+        
+        //save_message_log(PACK);
         if(send(temp->fd,&PACK,sizeof(PACK),0) < 0) {
                 my_err("send",__LINE__);
                 exit(0);
@@ -197,7 +361,7 @@ int  search_friend(char * num)// 在数据库中查找是否有这个用户
     sprintf(sql,"SELECT * FROM userall WHERE num='%s';",num);
 
      //查询
-    printf("==%s",sql);
+   // printf("==%s",sql);
     res = mysql_query(conn,sql);//正确返回0
     if(res) {
         perror("my_query");
@@ -206,8 +370,9 @@ int  search_friend(char * num)// 在数据库中查找是否有这个用户
     } else{
         //把查询结果给res_ptr
         res_ptr = mysql_store_result(conn);
+            row = mysql_num_rows(res_ptr);
         //如果结果不为空,则
-        if(res_ptr) {
+        if(row) {
             return 1;//找到
         }else {
             return 0;//查无此人
@@ -220,9 +385,8 @@ int  online_fri(char* num)//根据用户ID号进性查询好友是否在线
     USA *temp=head->next;
 
     while(temp!=NULL) {
-
-    if(strcmp(temp->num,num) == 0) {
-        return  temp->fd;  ;//在线
+        if(strcmp(temp->num,num) == 0) {
+        return  temp->fd;  //在线
     }
         temp=temp->next;
     }
@@ -236,71 +400,415 @@ void friend_append(char*fri_1 ,char*fri_2 )
 
 
     char  sql[200];
-    sprintf(sql,"INSERT INTO friend_%s name VALUES('%s');",fri_1,fri_2);
+    sprintf(sql,"INSERT INTO friend_%s  VALUES('%s');",fri_1,fri_2);
     res = mysql_query(conn,sql);//正确返回0
     res_ptr = mysql_store_result(conn);
-    printf("==%s",sql);
+  //  printf("==%s",sql);
     
     memset(&sql,0,sizeof(sql));
-    sprintf(sql,"INSERT INTO friend_%s name VALUES('%s');",fri_2,fri_1);
+    sprintf(sql,"INSERT INTO friend_%s  VALUES('%s');",fri_2,fri_1);
     res = mysql_query(conn,sql);//正确返回0
     res_ptr = mysql_store_result(conn);
-    printf("==%s",sql);
+  //  printf("==%s",sql);
 
 }
+void  create_message_log(char *fri_1,char *fri_2)
+{
+
+    int res;//执行sql语句后的返回标志
+    MYSQL_RES *res_ptr;//指向查询结果的指针
+
+    char  sql[200];
+    sprintf(sql,"create table  %s_to_%s  (name varchar(20),detail varchar(255),time  varchar(100) );",fri_1,fri_2);
+
+    res = mysql_query(conn,sql);//正确返回0
+    res_ptr = mysql_store_result(conn);
+  //  printf("==%s",sql);
+    
+    memset(&sql,0,sizeof(sql));
+    sprintf(sql,"create table  %s_to_%s  (name varchar(20),detail varchar(255),time  varchar(100) );",fri_2,fri_1);
+    res = mysql_query(conn,sql);//正确返回0
+    res_ptr = mysql_store_result(conn);
+  //  printf("==%s",sql);
+
+}
+
 void search_friend_add(MES PACK)//对添加好友请求而的处理的函数
 {
-    int  to_fd;
+    int  to_fd,from_fd;
     to_fd = online_fri(PACK.to);
-    
-if(to_fd){
-    if ( PACK.state == -1){
-      if (search_friend(PACK.to)  ){
-            printf("&&&& mode= %d",PACK.mode );
-            if(send(to_fd,&PACK,sizeof(PACK),0) < 0) { ///*************************************************``
-                    my_err("send",__LINE__);
-                    exit(0);
+    from_fd = search_friend(PACK.from);
+    if (search_friend(PACK.to) ){ //判断用户是否存在 
+        if(to_fd){                //判断用户是否在线
+            if ( PACK.state == -1)  printf("&&&& mode= %d",PACK.mode );    
+            if(PACK.state ==0) ;
+            if (PACK.state ==1){
+                printf("添加账号\n");
+                friend_append(PACK.from,PACK.to);//添加好友信息至数据库中               
+                create_message_log(PACK.from,PACK.to);//创建聊天记录的表格
+                printf("已添加至数据库中\n");      
             }
-        }
-
-
-    }
-
-    if(PACK.state ==0){
-    
-        if(send(to_fd,&PACK,sizeof(PACK),0) < 0) { ///*************************************************``
+            
+            if(send(to_fd,&PACK,sizeof(PACK),0) < 0) { 
                 my_err("send",__LINE__);
                 exit(0);
-        }
-
-    }
-    if (PACK.state ==1){
-        friend_append(PACK.from,PACK.to);//
-            if(send(to_fd,&PACK,sizeof(PACK),0) < 0) { ///*************************************************``
-                    my_err("send",__LINE__);
-                    exit(0);
             }
+        } else//保存为离线消息
+            save_in_mysql(PACK);
 
-    }
-}else//保存为离线消息
-    save_in_mysql(PACK);
-}    
-void server_center(int  connfd)
-{
-    MES PACK;
-    while(1)
-    {
-        memset(&PACK,0,sizeof(PACK));
-        if (recv(connfd,&PACK,sizeof(PACK),0) <0 ){
+    }else{                             
+        PACK.state = -2;//该用户不存在    
+        printf(" state = %d\n",PACK.state );     
+        if(send(from_fd,&PACK,sizeof(PACK),0) < 0) { ///**************这个send有问题啊***********************************``
             my_err("send",__LINE__);
             exit(0);
         }
+    }
+}
+
+void  group_friend_append(char* from,char *group_name)//添加好友至群列表中  
+{
+    int res;//执行sql语句后的返回标志
+    MYSQL_RES *res_ptr;//指向查询结果的指针
+
+
+    char  sql[200];
+    sprintf(sql,"INSERT INTO  group_%s  VALUES ('%s');",group_name,from);
+
+    res = mysql_query(conn,sql);//正确返回0
+ 
+    res_ptr = mysql_store_result(conn);
+   // printf("==%s",sql);
+
+
+}
+
+void  group_create_mes_log(char* from,char* group_name)//为此成员创建群聊天记录的表格
+{
+    int res;//执行sql语句后的返回标志
+    MYSQL_RES *res_ptr;//指向查询结果的指针
+
+
+    char  sql[200];
+    sprintf(sql,"create table  %s_group_%s  (name varchar(20),detail varchar(255),time  varchar(100) );",group_name,from);
+
+    res = mysql_query(conn,sql);//正确返回0
+    res_ptr = mysql_store_result(conn);
+  //  printf("==%s",sql);
+
+
+}
+void group_create_table(char* from,char* group_name) // 创建群成员表格 并将群主加入表内
+{
+    int res;//执行sql语句后的返回标志
+    MYSQL_RES *res_ptr;//指向查询结果的指针
+
+
+    char  sql[200];
+    sprintf(sql,"create table  group_%s  (name varchar(20));",group_name);
+
+    res = mysql_query(conn,sql);//正确返回0
+    res_ptr = mysql_store_result(conn);
+   // printf("==%s",sql);
+    
+    res_ptr =NULL;
+    
+    memset(sql, 0, sizeof(sql));
+    
+    sprintf(sql,"INSERT INTO  group_%s  VALUES('%s');",group_name,from);
+    res = mysql_query(conn,sql);//正确返回0
+    res_ptr = mysql_store_result(conn);
+ //   printf("==%s",sql);
+///%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%注册时
+
+
+    memset(sql, 0, sizeof(sql));
+    sprintf(sql,"INSERT INTO  my_group_%s  VALUES('%s');",from,group_name);
+    res = mysql_query(conn,sql);//正确返回0
+    res_ptr = mysql_store_result(conn);
+  //  printf("==%s",sql);
+
+}
+
+
+void my_group_append(char *from,char *group_name)
+{
+
+    int res;//执行sql语句后的返回标志
+    MYSQL_RES *res_ptr;//指向查询结果的指针   num QUN_NAME   
+
+
+    char  sql[200];
+    
+    memset(sql, 0, sizeof(sql));
+    sprintf(sql,"INSERT INTO  my_group_%s  VALUES('%s');",from,group_name);
+    res = mysql_query(conn,sql);//正确返回0
+    res_ptr = mysql_store_result(conn);
+  //  printf("==%s",sql);
+
+
+}
+
+
+void  group_request(MES PACK)//处理 群添加请求
+{
+    printf("开始群请求处理");
+    int  to_fd,from_fd;
+    to_fd = online_fri(PACK.to);
+    from_fd = search_friend(PACK.from);
+    if (PACK.state ==3){
+        group_create_table(PACK.from,PACK.num);
+        return ;
+    }
+    if (search_friend(PACK.to) ){ //判断用户是否存在 
+        if(to_fd){                //判断用户是否在线
+            if (PACK.state == -1)  printf("&&&& mode= %d",PACK.mode );    
+            if (PACK.state ==0) ;// 拒绝请求
+            if (PACK.state ==1){//同意请求并添加至群列表中 
+                printf("添加群成员账号\n");
+                
+                group_friend_append(PACK.from,PACK.num);//添加群信息至数据库中    num QUN_NAME             
+                my_group_append(PACK.from,PACK.num);//
+                group_create_mes_log(PACK.from,PACK.num);//创建聊天记录的表格
+                printf("已添加至数据库中\n");      
+            }
+            
+            if(send(to_fd,&PACK,sizeof(PACK),0) < 0) { 
+                my_err("send",__LINE__);
+                exit(0);
+            }
+        } else//保存为离线消息
+            save_in_mysql(PACK);
+
+    }else{                             
+        PACK.state = -2;//该用户不存在    
+        printf(" state = %d\n",PACK.state );     
+        if(send(from_fd,&PACK,sizeof(PACK),0) < 0) { ///**************这个send有问题啊***********************************``
+            my_err("send",__LINE__);
+            exit(0);
+        }
+    }
+}
+
+
+void    del_fd(int   connfd)//将次节点从登录链表中删除
+{
+    USA *temp;
+    temp = head;
+
+    while(temp->next !=  NULL)
+    {
+        if (connfd == temp->next->fd) 
+            break;
+
+    temp = temp->next;
+    }
+    
+    temp->next = temp->next->next;
+
+
+}
+
+
+
+//退出登陆
+void logout(int connfd)
+{
+    MES PACK;
+    PACK.mode = 10;
+    if(send(connfd,&PACK,sizeof(PACK),0) < 0) {
+        my_err("send",__LINE__);
+        exit(0);
+    }
+    del_fd(connfd);
+    close(connfd);
+    pthread_exit(0);
+}
+
+void  select_message_log(MES PACK,int connfd)
+{
+    int res;//执行sql语句后的返回标志
+    MYSQL_RES *res_ptr;//指向查询结果的指针
+    MYSQL_FIELD *field;//字段结构指针
+    MYSQL_ROW result_row;//按行返回查询信息
+    int row,column;//查询返回的行数和列数
+
+    int i,j;
+
+    char  sql[200];
+    sprintf(sql,"SELECT *  FROM %s_to_%s ;",PACK.from,PACK.to);
+     //查询
+   // printf("==%s\n",sql);
+
+
+    res = mysql_query(conn,sql);//正确返回0
+    if(res) {
+        perror("my_query");
+        mysql_close(conn);
+        exit(0);
+    } else{
+        //把查询结果给res_ptr
+        res_ptr = mysql_store_result(conn);
+        //如果结果不为空,则输出
+        if(res_ptr) {
+            column = mysql_num_fields(res_ptr);
+            row = mysql_num_rows(res_ptr);
+            printf("查到%d行\n",row);
+           // 输出结果的字段名
+            for(i = 0;field = mysql_fetch_field(res_ptr);i++) {
+                printf("%10s",field->name);
+            }
+             puts("");
+           // 按行输出结果
+            for(i = 1;i < row+1;i++){
+                result_row = mysql_fetch_row(res_ptr);
+                printf("column = %d\n",column);
+                    memset(&PACK,0,sizeof(PACK));
+                
+                PACK.mode = 11;
+        
+                strcpy( PACK.num,result_row[0]);
+
+                strcpy(PACK.detail,result_row[1]);
+
+                strcpy(PACK.time_mes,"6666");                
+
+     //           printf("mode = %d,%s,%s,%s,row = %d\n " ,PACK.mode,PACK.num,PACK.detail,PACK.time_mes, row); 
+ 
+                    if(send(connfd,&PACK,sizeof(PACK),0) < 0) {
+                         my_err("send",__LINE__);
+                    } 
+                }
+                puts("");
+            }
+
+        }
+}
+
+char group_all_member(MES PACK)
+{
+    int res;//执行sql语句后的返回标志
+    MYSQL_RES *res_ptr;//指向查询结果的指针
+    MYSQL_FIELD *field;//字段结构指针
+    MYSQL_ROW result_row;//按行返回查询信息
+    int row,column;//查询返回的行数和列数
+
+    int i,j;
+    int  connfd;//
+
+    char  sql[200];
+    sprintf(sql,"SELECT *  FROM group_%s ;",PACK.num);
+     //查询
+   // printf("==%s\n",sql);
+
+    char message[255];
+    strcpy(message, PACK.detail);
+    char from[20];
+    strcpy(from, PACK.from);
+    char group_name[20];
+    strcpy(group_name,PACK.num);
+
+
+    res = mysql_query(conn,sql);//正确返回0
+    if(res) {
+        perror("my_query");
+        mysql_close(conn);
+        exit(0);
+    } else{
+        //把查询结果给res_ptr
+        res_ptr = mysql_store_result(conn);
+        //如果结果不为空,则输出
+        if(res_ptr) {
+            column = mysql_num_fields(res_ptr);
+            row = mysql_num_rows(res_ptr);
+            printf("查到%d行\n",row);
+           // 输出结果的字段名
+            for(i = 0;field = mysql_fetch_field(res_ptr);i++) {
+                printf("%10s",field->name);
+            }
+             puts("");
+           // 按行输出结果
+            for(i = 1;i < row+1;i++){
+                result_row = mysql_fetch_row(res_ptr);
+                printf("column = %d\n",column);
+                for(j = 0;j< column;j++) {
+                    printf("%10s\n",result_row[j]);
+                    memset(&PACK,0,sizeof(PACK));
+                
+                    
+                    PACK.mode = 4;
+                    strcpy(PACK.to , result_row[j]);
+                    strcpy( PACK.num  ,group_name);
+                    strcpy(PACK.from, from);
+                    strcpy(PACK.detail, message);
+                    PACK.mun = row;
+    //                printf(" group_name= %s, from = %s,PACK.to=%s, message = %s\n",PACK.num, PACK.from,PACK.to ,PACK.detail);    
+                    
+                    connfd = online_fri(result_row[j]);
+      //              printf("connfd = %d\n", connfd);
+                    if (connfd){        
+                        if(send(connfd,&PACK,sizeof(PACK),0) < 0) {
+                            my_err("send",__LINE__);
+                        } 
+                        //save message
+                    }else {//保存离线消息
+                        
+                        save_in_mysql(PACK);
+                    }
+
+
+                }
+                puts("");
+            }
+        }
+    }          
+
+}
+void file_center(MES PACK)
+{
+    int connfd;
+    connfd = online_fri(PACK.to);
+    if(connfd){
+        if( send (connfd ,&PACK ,sizeof(PACK),0) < 0 ){
+            my_err("send", __LINE__);
+        }
+    }else {
+        printf("对方不在线\n");
+    }
+
+
+}
+
+
+
+
+void server_center(int  connfd)
+{
+    MES PACK;
+    int re;
+    while(1)
+    {
+        memset(&PACK,0,sizeof(PACK));
+        if ((re=  recv(connfd,&PACK,sizeof(PACK),0)) <0 ){// <0 出错 =0 连接关闭 
+            my_err("send",__LINE__);
+            exit(0);
+        } else if(re == 0) {
+            printf("%s异常离线了\n",select_name(connfd));
+            
+        //    printf("&&&mode == %d,PACK.state=%d \n",PACK.mode,PACK.state);
+            logout(connfd);
+            close(connfd);
+            pthread_exit(0);
+            
+        }
+     //   printf("&&&mode == %d,PACK.state=%d \n",PACK.mode,PACK.state);
         switch (PACK.mode){
             case 3:
-                private_chat(PACK);
+                private_chat(PACK);//处理私聊消息
                 break;
             case 4:
-                
+                group_all_member(PACK);  
+            //group_chat(PACK);//处理群消息
                 break;
             case 5:
                 
@@ -316,15 +824,30 @@ void server_center(int  connfd)
                 break;
             case 9:
                 
+                group_request(PACK);//处理群请求
                 break;
             case 10:
+                //退出登陆
+                printf("%s下线\n",PACK.from);
+                logout(connfd);
+                break; 
+            case 11:
+            // //私聊记录
+                select_message_log(PACK,connfd);
+                break;
+            case 15:
+                //文件处理
+                file_center(PACK);                    
+                break;                    
+            case 18:
+                group_list_init(connfd);
+                break;
+            case 19:
                 
+                friend_list_init(connfd); //这个好友了列表初始化需要放到一个比较合适的位置，之后再说
                 break;
         }
-
     } 
-
-
 
 }
 int  match(MES *a,int connfd)//登录，注册的处理
@@ -395,14 +918,14 @@ int  match(MES *a,int connfd)//登录，注册的处理
                 } 
             }
         
-        if(flag) {//
+        if(flag) {// 没有重复登录
             PACK.state = 1;
             if(send(connfd,&PACK,sizeof(PACK),0) < 0) {
                 my_err("send",__LINE__);
                 exit(0);
             }
 
-        printf("88888\n");
+    //    printf("88888\n");
         return 1;
         }   else {
                 PACK.state = 0;
@@ -427,8 +950,8 @@ int  match(MES *a,int connfd)//登录，注册的处理
             //如果结果为空,未重名,添加账号
             ro = mysql_num_rows(res_ptr);
         }
-        printf("ro = %d\n", ro);
-        printf("mode = %d\n", PACK.mode);
+    //    printf("ro = %d\n", ro);
+    //    printf("mode = %d\n", PACK.mode);
         if(!ro) {//success
             sprintf(sql,"INSERT INTO userall (num,passd) VALUES('%s','%s');",num,passd);
             printf("%s\n", sql);
@@ -438,14 +961,30 @@ int  match(MES *a,int connfd)//登录，注册的处理
                 mysql_close(conn);
                 exit(0);
             }
+
+            res_ptr = mysql_store_result(conn);
             PACK.state = 1;
             printf("mode = %d\n", PACK.mode);
             create_friend_table(num);
+            
+
+
+
+            memset(sql, 0, sizeof(sql));
+            sprintf(sql,"create table  my_group_%s  (name varchar(20));",num);
+
+            res = mysql_query(conn,sql);//正确返回0
+            res_ptr = mysql_store_result(conn);
+      //      printf("==%s",sql);
+
+
+
+
             if(send(connfd,&PACK,sizeof(PACK),0) < 0) {
                 my_err("send",__LINE__);
                 exit(0);
             }
-            return 1;
+            return 2;
         }else {
             PACK.state = 0;//can't register
             if(send(connfd,&PACK,sizeof(PACK),0) < 0) {
@@ -458,22 +997,26 @@ int  match(MES *a,int connfd)//登录，注册的处理
 }
 void*  client(void *arg)
 {
+  //  puts("dasdasd");
+  //  printf("**fd:%d\n",(int *) arg);
     MES PACK;
     int ret;
     char  name[20];
-    int connfd = (int)arg;
+    int connfd = (int*)arg;
+    int a= connfd;
     while(1){
         memset(&PACK,0,sizeof(PACK));
-    
-        ret= recv (connfd,& PACK, sizeof(PACK),0);
+            ret= recv (connfd,& PACK, sizeof(PACK),0);// <0 出错 =0 连接关闭 
       
-        if(ret < 0) {
-            my_err("recv",__LINE__);
-            exit(0);
-        } else if(ret == 0) {
+            if(ret < 0) {
+                my_err("recv",__LINE__);
             close(connfd);
             pthread_exit(0);
-        }
+                exit(0);
+            } else if(ret == 0) {
+        
+            pthread_exit(0);
+            }
         int  res;
         
     
@@ -484,9 +1027,15 @@ void*  client(void *arg)
         if ( res ==  1  ){
             //登录成功跳转界面        
             printf("我爱你黑牛豆奶\n");
-          add_list(name,connfd);
-            friend_list_init(connfd,name);
+        
+          leave_mess(connfd,name);//离线消息的处理
+        
+        add_list(name,connfd);
+            
           server_center(connfd);//进入多任务处理界面
+        }
+        else if (res==2){    //成功注册的情况
+            client((void*)a);           
         }
         else{  
             printf("failed\n");
