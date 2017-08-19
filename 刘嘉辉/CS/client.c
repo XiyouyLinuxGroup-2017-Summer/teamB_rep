@@ -32,10 +32,12 @@ typedef struct message
         int state;//状态
         char num[20];//账号
         char passd[20];
+        char mem_name[20];//群成员姓名
+        char host[20];//群主名称
         char to[20];
         char from[20];
         char detail[255];    
-        char  time_mes[50];
+        char  time_mes[100];
         int  mun;
 
 
@@ -61,6 +63,7 @@ typedef struct group_nam{
     
     int  n;
     char group_name[20];
+    char group_host[20];//群主名称
     struct  group_nam  *next;
 }GROUP ;
 
@@ -111,6 +114,12 @@ void mess_box_view();    //消息盒子预览
 void   friend_request(MES PACK);//好友请求的处理
 void  create_group();//创建 群聊
 
+void  quit_group();
+void  message_select_group();//查看聊天记录
+void  group_dismiss(); // 解散群//只有群主才能解散
+void  group_member_management();
+void  show_group_member ();//群成员展示
+void delete_friend_center();//好友删除
 void  chat_to_group();//主动群聊天
 void  group_select_friend();//选择进入群聊的好友
 /****************************************************************************************/
@@ -142,13 +151,17 @@ int   select_fri(void)//选择好友进行聊天
 int   select_group(void)//选择群序号进行聊天
 {
     int  n;
-    GROUP *temp = APPLE->next;
+    GROUP *temp ;
+    temp = APPLE->next;
+    
     memset(&send_num,0,sizeof(send_num));
     printf("请输入你要选择的群序号\n");
     scanf("%d",&n);
     while(temp != NULL) {
+        printf("n= %d,temp->n= %d", n,temp->n );
         if(n == temp->n) {
             strcpy(send_num,temp->group_name);//消息接收方， 全局变量 
+            printf(" n=%d   group =  %s\n ",n,send_num);
             break;
         }
         temp=temp->next;
@@ -203,6 +216,17 @@ void  friend_request(MES PACK)//好友请求的处理
 {
     char str[20];
     int  sel;
+    
+    USA  *temp ,*ptr;
+    temp = head->next;
+    while(temp != NULL){
+        if(strcmp(PACK.from,temp->num)==0  ){
+            printf("已经是您的好友了！！！");
+        return  ;
+        }
+    temp = temp->next;
+    }
+
     while(1){
         printf("请输入 1,0 来回复好友请求: \n");
         //scanf("%d",&sel);
@@ -217,6 +241,24 @@ void  friend_request(MES PACK)//好友请求的处理
         PACK.state = 0;
     } 
     //调换 from,to 顺序
+    
+    ptr = (USA *) malloc (sizeof(USA));
+    memset(ptr,0 ,sizeof(ptr));
+    
+    strcpy(ptr->num, PACK.from);
+
+    if(sel==1){
+        ptr->next = head->next;
+        head ->next = ptr;
+    }
+
+
+
+
+
+
+
+
     printf("你的选择是sel ===%d",PACK.state);
     strcpy( str, PACK.from);
     memset( &PACK.from, 0, sizeof(PACK.from));
@@ -235,8 +277,30 @@ void  friend_request(MES PACK)//好友请求的处理
 
 void  group_request(MES PACK)//请求的处理
 {
+    USA *temp;
+    temp = (USA * )malloc(sizeof(USA));
+    memset(&temp, 0, sizeof(temp));
+    
+
+
+    strcpy(temp->num, PACK.from);
+    
+    while(temp != NULL){
+        if(strcmp  (PACK.from, temp->num) == 0 ){
+        printf("已经是您的好友了\n");
+        return  ;
+        }
+    }
+
+
+
+
     char str[20];
     int  sel;
+    
+    
+    
+    
     while(1){
         printf("请输入 1,0 来回复群请求: \n");
         sel = chose_mode();
@@ -251,6 +315,9 @@ void  group_request(MES PACK)//请求的处理
     } 
     //调换 from,to 顺序
   //  printf("你的选择是sel ===%d",PACK.state);
+    
+    memset(temp,0,sizeof(temp));
+    
     strcpy( str, PACK.from);
     memset( &PACK.from, 0, sizeof(PACK.from));
     memset( &PACK.to, 0, sizeof(PACK.to));
@@ -259,6 +326,17 @@ void  group_request(MES PACK)//请求的处理
     //发射
   //  printf(" ==%s== %s*****state=%d@@@\n",PACK.to,PACK.from, PACK.state );
     
+    if (PACK.state == 1){
+        temp->next=head->next;
+        head->next= temp;
+
+
+    }
+
+
+
+
+
     if(send(serv_fd,&PACK,sizeof(PACK),0) < 0) {
         my_err("send",__LINE__);
         exit(0);
@@ -363,7 +441,8 @@ void show_group_list()
     while (temp != NULL)
     {
         temp->n = (++n);
-        printf("%d. %s\n",temp->n,temp->group_name);
+        printf("序号  群名   群主\n");
+        printf("%d.    %s      %s\n",temp->n,temp->group_name,temp->group_host);
         temp = temp->next;
     }
     printf("press q to return\n");
@@ -374,6 +453,8 @@ void show_group_list()
 void chat_to_one()
 {
     MES PACK;
+    
+    printf("------%s----\n",send_num);
     printf("---enter to send--\n");
     printf("---quit  to leave-\n");
     getchar();
@@ -443,11 +524,17 @@ void  private_chat()
         case 2:
             a = select_fri();//选择好友聊天
             if(a)  chat_to_one();
-            else   private_chat();
-            
+    
+            memset(send_num, 0 , sizeof(send_num)) ;   
+            private_chat();
             break;
         case 3:
             //删除好友
+            a= select_fri();
+            if(a)  delete_friend_center();
+            
+            memset(send_num, 0 , sizeof(send_num)) ;   
+            private_chat();    
             break;
         case 4 :
             // 
@@ -457,6 +544,26 @@ void  private_chat()
             break;
     }
 }
+
+void delete_friend_center()//好友删除
+{
+    MES PACK;
+    memset(&PACK,0 ,sizeof(PACK));
+
+    strcpy(PACK.from, my_num);
+    strcpy(PACK.to,send_num );
+    
+    PACK.mode =  13;
+    
+            if(send(serv_fd,&PACK,sizeof(PACK),0) < 0) {
+                my_err("send",__LINE__);
+                exit(0);
+            }
+    printf("删除好友成功\n");
+    return  ;
+
+
+}
 void add_list(char *num)//添加至好友列表
 {
     USA *temp;
@@ -465,32 +572,25 @@ void add_list(char *num)//添加至好友列表
     temp->next = head->next;
     head->next = temp;
 }
-void group_add_list(char *name)//添加至QUN列表
+void group_add_list(char *name,char *host)//添加至QUN列表
 {
     GROUP *temp;
     temp = (GROUP *)malloc(sizeof(GROUP));
     strcpy(temp->group_name ,name);
+    strcpy(temp->group_host,host );
     temp->next = APPLE->next;
     APPLE->next = temp;
 }
 int  friend_list_init(MES PACK)//更新好友列表
 {
-//    printf("friend_list_init \n");
 
-
- //   printf("好友名%s \n", PACK.num);
-        
     add_list(PACK.num);
     return  0;
 }
 int  group_list_init(MES PACK)//更新QUN列表
 {
-   // printf("group_list_init \n");
 
-
-  //  printf("qun%s \n", PACK.num);
-        
-    group_add_list(PACK.num);
+    group_add_list(PACK.num,PACK.host);
     return  0;
 }
 void get_group_chat(MES PACK)//获取群聊天信息 
@@ -539,21 +639,15 @@ void only_recv(void)
         memset(&PACK,0,sizeof(MES));
         int re =0;
         while (re != sizeof(PACK)){
-     //       printf("-------------------\n");
             re = recv(serv_fd,&PACK,sizeof(PACK),0);
         
-        
-        
-        
-        
-    //    printf("PACK.mode =  %d, PACK.num= %s\n ",PACK.mode,PACK.num);
-        if(re == 0) {
-            puts("服务器开始维护,你已断开连接!");
-            exit(0);
-        } else if(re<0){
-            my_err("recv",__LINE__);
-            exit(0);
-        }
+            if(re == 0) {
+                puts("服务器开始维护,你已断开连接!");
+                exit(0);
+            } else if(re<0){
+                my_err("recv",__LINE__);
+                exit(0);
+            }
         }
         switch(PACK.mode) {
         case 3:
@@ -614,8 +708,8 @@ void only_recv(void)
             break;
         case 12:
             //群聊记录
-            // printf("%s:"WHITE" %s\n",PACK.from,PACK.detail);
-            // break;
+             printf(" %s : %s  %s \n" , PACK.num,PACK.detail,PACK.time_mes);
+             break;
         case 13:
             //删好友
             // printf("%s已经删除了你...\n"WHITE,PACK.from);
@@ -623,7 +717,10 @@ void only_recv(void)
         case 15:
             recv_file(PACK);
             break;
-        case 18:
+        case 17://群成员展示
+            printf("群成员为 %s\n",PACK.mem_name);
+            break;
+        case 18://群列表
             group_list_init(PACK);
             break;
         case 19:
@@ -637,6 +734,7 @@ void only_recv(void)
 void mess_box_view()//消息盒子预览
 {
     int  y=0;
+    char a;
     BOX *temp;
     temp = HEAD->next;
     while(temp != NULL)
@@ -646,13 +744,25 @@ void mess_box_view()//消息盒子预览
         printf("%d. %s的消息请处理\n",y ,temp->PACK.from );
     temp = temp->next;    
     }
-
+        printf("presss  q to  quit\n");    
+        while( ( a=getchar())   != 'q');        
            
 }
 void  mess_box_solve()//消息执行
 {
+    int  y=0;
+    char a;
+    BOX *temp;
+    temp = HEAD->next;
+    while(temp != NULL)
+    {
+        temp->n = (++y);
+        temp->flag = 0;
+    temp = temp->next;    
+    }
+           
     int  sel; 
-    BOX *temp,*ptr;
+    BOX  *ptr;
     temp = HEAD->next;
     printf("请输入你要选择的消息序号\n");
     sel = chose_mode();
@@ -675,6 +785,8 @@ void  mess_box_solve()//消息执行
             printf("---from--%s<-",temp->PACK.from);
             puts("");
             printf("本条处理完毕\n");
+        printf("presss  q to  quit\n");    
+        while( ( a=getchar())   != 'q');        
 
             break;
         case  4:    
@@ -683,21 +795,28 @@ void  mess_box_solve()//消息执行
             printf("%s",temp->PACK.detail);
             printf("--group-%s-from--%s<-",temp->PACK.num,temp->PACK.from);
             printf("本条处理完毕\n");
+        printf("presss  q to  quit\n");    
+        while( ( a=getchar())   != 'q');        
             break;
         case 8:
             //好友请求
             friend_request(temp->PACK);//好友请求的处理         &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7
             //sleep(2);
             printf("本条处理完毕\n");
+        printf("presss  q to  quit\n");    
+        while( ( a=getchar())   != 'q');        
             break;
         case 9:
             //群请求
             group_request(temp->PACK);
             //sleep(2);
             printf("本条处理完毕\n");
+        printf("presss  q to  quit\n");    
+        while( ( a=getchar())   != 'q');        
             break;
     }   
     ptr->next= temp->next;
+    free (temp);
 }
 void mess_box_center()//消息盒子处理中心
 {
@@ -715,6 +834,7 @@ void mess_box_center()//消息盒子处理中心
     }while(sel<1 || sel >3);
     switch(sel){
         case 1:
+            
             mess_box_view();//消息盒子预览
             mess_box_center();
             break;
@@ -728,7 +848,7 @@ void mess_box_center()//消息盒子处理中心
 
 }
 
-void  group_select_friend(char *group_name)//选择进入群聊的好友
+void  group_select_friend()//选择进入群聊的好友
 {
     MES  PACK;
     USA *temp;
@@ -762,7 +882,7 @@ while(1){
         PACK.state = -1;
         strcpy(PACK.from, my_num);
         strcpy(PACK.to, name);
-        strcpy(PACK.num,group_name);
+        strcpy(PACK.num,send_num);
   //      printf("PACK.to=%s  ,PACK.from =%s,PACK.GROUPNAME =%s\n",PACK.to ,PACK.from, PACK.num  );
         if(send(serv_fd,&PACK,sizeof(PACK),0) < 0) {
             my_err("send",__LINE__);
@@ -789,7 +909,6 @@ void create_group ()
     PACK.state = 3;
     
 
-  //  printf("$$ser_fd = %d PACK.mode=%d, PACK.state=%d\n ",serv_fd,PACK.mode,PACK.state);
     if(send(serv_fd,&PACK,sizeof(PACK),0 ) <0 ){
         my_err("send",__LINE__);
     }
@@ -797,51 +916,227 @@ void create_group ()
     printf("您创建的群名为%s\n ",group_name );
     
     //选择进入群聊的好友
-    group_select_friend(group_name);
 }
 
+
+int host_judge() //群主判断
+{
+    GROUP *temp;
+    temp =  APPLE->next; 
+    while(temp!= NULL){
+        if (strcmp(send_num, temp->group_name)==0  && strcmp(my_num, temp->group_host) ==0 ){
+            return  1;
+        }
+    temp = temp->next;
+    }
+    if (temp==NULL)  return  0;
+    
+}
 void group_chat()//主动群聊天
 {
-    int sel,a;
-    MES PACK;
-    memset(&PACK,0,sizeof(PACK));
+    GROUP *temp;
+    GROUP *drop;
+    temp = APPLE->next;
+    // while(temp != NULL)
+    // {
     
-            PACK.mode = 18;   //更新群列表
-            if(send(serv_fd,&PACK,sizeof(PACK),0) < 0) {
-                my_err("send",__LINE__);
-                exit(0);
-            }
+    // drop= temp->next;
+    // free(temp);
+    // temp = drop;
+    // }
+    // APPLE->next= NULL;
+
+    int sel,a;
+
+    
+     
     
     printf("1.群列表\n");
-    printf("2.选择群聊天\n");
-    printf("3.删除群\n");
-    printf("4.查看群聊天记录\n");
-    printf("5.返回上一级菜单\n");
+    printf("2.查看群成员列表\n");
+    printf("3.选择群聊天\n");
+    printf("4.群成员管理\n");
+    printf("5.查看群聊天记录\n");
+    printf("6.退出群聊\n");
+    printf("7.返回上一级菜单\n");
     do{
         sel = chose_mode();
-    }while(sel<1||sel>5);
+    }while(sel<1||sel>7);
    
     switch (sel){
         case 1:
-            show_group_list();
+            //群列表
+           show_group_list();
             group_chat();
             break;
-        case 2:
+        case 2://群成员展示
+            a = select_group();//选择qun
+            printf("a==%d\n",a);
+            if (a)  show_group_member();
+            memset(send_num, 0 , sizeof(send_num)) ;   
+            group_chat();
+            break;
+        
+        case 3:
             a = select_group();//选择qun聊天
             if(a)  chat_to_group();
-            else   group_chat();
-            
+            group_chat();
+            memset(send_num, 0 , sizeof(send_num)) ;   
             break;
-        case 3:
-            //删除好友
+        case 4:
+            //群成员管理
+            a = select_group();//选择qun
+            if (a && host_judge(my_num))
+                 group_member_management();
+            else 
+                printf("您不是本群群主无法管理\n");     
+            memset(send_num, 0 , sizeof(send_num)) ;   
+            group_chat();
             break;
-        case 4 :
-            // 
-           // message_select_group();//查看聊天记录
+       /* case 5:
+            //解散群a   
+            a = select_group();//选择qun
+            if (a && host_judge(my_num))
+                group_dismiss();
+            else 
+                rpintf("您不是群主无法解散本群\n");
+             group_chat();
+            break;*/
+        case 5 :
+           // 
+            a = select_group();//选择qun
+           message_select_group();//查看聊天记录
+            memset(send_num, 0 , sizeof(send_num)) ;   
             break;
-        case 5:
+        case 6:
+            a = select_group();//选择qun
+            quit_group();//退出群聊         
+            memset(send_num, 0 , sizeof(send_num)) ;   
+            break;
+        case 7:
             break;
     }
+}
+void  quit_group()
+{
+    MES  PACK;
+    memset(&PACK , 0, sizeof(PACK));
+    PACK.mode = 21;
+    strcpy(PACK.num, send_num);
+    strcpy( PACK.from, my_num );
+    
+    if(send(serv_fd, &PACK,sizeof(PACK),0 )<0 ){
+        my_err("send",__LINE__);
+    }
+
+    printf("退出群聊成功");
+
+}
+void  message_select_group()//查看聊天记录
+{
+    MES PACK;
+    char a;
+    memset(&PACK,0, sizeof(PACK));
+
+    PACK.mode = 12;
+    strcpy(PACK.from, my_num);
+    strcpy(PACK.num,send_num );
+
+    if(send(serv_fd, &PACK,sizeof(PACK),0 )<0 ){
+        my_err("send",__LINE__);
+    }
+    
+
+        printf("presss  q to  quit\n");    
+        while( ( a=getchar())   != 'q');        
+
+
+}
+void group_member_delete()
+{
+    MES PACK;
+    memset(&PACK,0, sizeof(PACK));
+    char memname[20];
+    printf("请输入你要删除的成员名\n");
+    scanf("%s", memname);
+    if (strcmp(my_num , memname ) ==0  ){
+        printf("不能删除自己\n");
+        return  ;
+    } 
+    PACK.mode = 20 ;
+    strcpy (PACK.mem_name, memname);
+    strcpy(PACK.num , send_num);
+    
+    if(send(serv_fd,&PACK,sizeof(PACK),0) < 0) {
+        my_err("send",__LINE__);
+        exit(0);
+    }
+    printf("删除成功\n");
+    sleep(2);
+}
+
+
+void  group_member_management()
+{
+    int sel;
+    printf("1.邀请好友\n");
+    printf("2.踢人\n");
+    printf("3.返回上一级菜单\n");
+    do {
+        sel = chose_mode();
+    }while(sel < 1||sel>3 );
+
+    switch(sel){
+        case 1:
+            group_select_friend();//选择进入群聊的好友
+            group_member_management();
+            break;
+        case 2:
+            group_member_delete();//删除此群成员
+            group_member_management();
+            break;
+        case 3:
+            break;
+    }
+
+}
+void  show_group_member() //群成员展示
+{
+    char a;
+    MES PACK;
+    memset( &PACK, 0, sizeof(PACK) );
+
+    strcpy(PACK.num, send_num);
+    strcpy(PACK.from, my_num);
+    PACK.mode = 17;
+
+    if(send(serv_fd,&PACK,sizeof(PACK),0) < 0) {
+        my_err("send",__LINE__);
+        exit(0);
+    }
+
+        printf("presss  q to  quit\n");    
+        while( ( a=getchar())   != 'q');        
+
+}
+
+
+void  group_dismiss() // 解散群//只有群主才能解散
+{
+    
+    MES PACK;
+    memset( &PACK, 0, sizeof(PACK) );
+
+    strcpy(PACK.num, send_num);//群名称
+    strcpy(PACK.from, my_num);//根据发送者解析是否为群主
+    PACK.mode = 16;//解散群
+
+        if(send(serv_fd,&PACK,sizeof(PACK),0) < 0) {
+            my_err("send",__LINE__);
+            exit(0);
+   //printf("解散此群成功\n");
+    printf("请稍后\n");
+            sleep(1);
+}
 }
 
 void  chat_to_group()//在群聊天 
@@ -861,13 +1156,11 @@ void  chat_to_group()//在群聊天
         setbuf(stdin,NULL);
         PACK.mode = 4;
         
-  //      printf("my_num  %s \n",my_num);
         puts("");
         strcpy(PACK.from,my_num);
         
         strcpy(PACK.num,send_num);//复制群名 
         
-    //    printf("PACK. from=%s***,send_num= %s*** ",PACK.from,send_num);
         if(send(serv_fd,&PACK,sizeof(PACK),0) < 0) {
             my_err("send",__LINE__);
             exit(0);
@@ -881,6 +1174,32 @@ void  chat_to_group()//在群聊天
 void  group_talk ()//发起群聊
 {
     system("clear");
+    
+
+
+    GROUP *temp;
+    GROUP *drop;
+    temp = APPLE->next;
+    while(temp != NULL)
+    {
+    
+    drop= temp->next;
+    free(temp);
+    temp = drop;
+    }
+    APPLE->next= NULL;
+
+
+    MES PACK;
+    memset(&PACK,0,sizeof(PACK));
+    
+            PACK.mode = 18;   //更新群列表
+            if(send(serv_fd,&PACK,sizeof(PACK),0) < 0) {
+                my_err("send",__LINE__);
+                exit(0);
+            }
+
+
     int sel;
     printf("1. 创建群名\n");
     printf("2. 进群聊条\n");
@@ -904,23 +1223,27 @@ void  group_talk ()//发起群聊
 }
 int  recv_file(MES PACK)//保存文件
 {
+    
+    char filename[100];
+    sprintf(filename,"/home/holy666/teamB_rep/刘嘉辉/CS/%s/%s",my_num,PACK.num);
+    printf("filename = %s\n",filename );
     int fd;
     int len;
-    if (( fd = open("/home/holy666/1.jpg" ,O_RDWR |O_APPEND|O_CREAT,  S_IRUSR|S_IWUSR ) ) <0  )  {
+    if (( fd = open(filename ,O_RDWR |O_APPEND|O_CREAT,  S_IRUSR|S_IWUSR ) ) <0  )  {
         my_err("send",__LINE__);
     }
    // len =  strlen(PACK.detail);
     len = write(fd, PACK.detail,PACK.mun ); 
     //printf("len = %d,PACK.mun= %d \n", len , PACK.mun);
     // printf("file detail %s\n" , PACK.detail);
-    
+    printf("PACK.num  FIELNAE %s\n" ,PACK.num );
     close(fd);
 
 }
 
 
 
-int send_file(int fd,char *friend_name )//发送文件函数
+int send_file(int fd,char *friend_name,char *file_name )//发送文件函数
 {
     MES PACK;
     int sum=0,len=0,file_len=0;
@@ -935,7 +1258,7 @@ int send_file(int fd,char *friend_name )//发送文件函数
     
     // 添加一个确定接收文件请求
 
-
+    
 
     while(sum != len){
         memset(file_buf, 0, sizeof(file_buf));
@@ -945,6 +1268,7 @@ int send_file(int fd,char *friend_name )//发送文件函数
         sum += file_len;
         ++i;
       //  printf("file_len= %d\n",file_len);
+        strcpy(PACK.num, file_name );
         strcpy( PACK.from ,my_num);
         strcpy( PACK.to , friend_name );
         memcpy(PACK.detail, file_buf,file_len );
@@ -967,16 +1291,36 @@ void   select_file_to_friend()
     temp = head->next;
  
     char file_name[50];
-    
+    char name[50];
     char file_buf[255];
     char friend_name[20];
     int file_fd =0;
     getchar();
     printf("请输入您要选择发送文件的名称(绝对路径)\n");
-    gets(file_name);
-   // printf("file_name %s" ,file_name);
-    file_fd = open( file_name , O_RDONLY);
+    gets(name);
+    printf("file_name %s" ,name);
+    
+    if (( file_fd = open( name , O_RDONLY)) == -1  ) {
+        my_err("open", __LINE__);
+    }
  
+    
+    printf("fd =%d",file_fd);
+    int i,j;
+    //对文件名进行解析
+    for (i=0,j=0; i<strlen(name);i++ ){
+        if(name[i]== '/'){
+            j=0;
+            continue;
+        }
+        file_name[j++] = name[i];
+    }
+    file_name[j] = '\0';
+
+
+printf("file_name =%s ", file_name);
+
+
     if ( file_fd ){//找到这个文件
         printf("请输入你要选择的好友名称\n");
         gets(friend_name);
@@ -995,7 +1339,7 @@ void   select_file_to_friend()
         else   //发送文件
         
                    
-            send_file(file_fd,friend_name );
+            send_file(file_fd,friend_name,file_name );
     }
     else {
         printf("该文件不存在!!! \n");
@@ -1030,13 +1374,15 @@ void client_center()
     
     system("clear");
     int  mun;
+    printf("欢迎您%s！！\n！",my_num );
     printf("1.摇一摇\n");
     printf("2.我的好友\n");
     printf("3.我的群\n");
     printf("4.消息盒子\n");
-    printf("5.*******\n");
+    printf("5.音效设定\n");
     printf("6.文件传输\n");
     printf("7.退出登陆\n");
+    
     int sel;
     do{
         sel=chose_mode();
@@ -1062,7 +1408,7 @@ void client_center()
         client_center();
         break;
     case 5:
-        //create_group();//发起群聊//背景音乐
+        //背景音乐
         client_center();
         break;
     case 6:
@@ -1097,13 +1443,42 @@ void logout(void)
     printf("正在服务器发送下线请求...\n");
 }
 
-
-
-void get_passd(char *passd)
+char getch()
 {
-    scanf("%s",passd);
+    char c;
+    system("stty -echo");  //不回显
+    system("stty -icanon");//设置一次性读完操作，如使用getchar()读操作，不需要按enter
+    c=getchar();
+    system("stty icanon");//取消上面的设置
+    system("stty echo");//回显
+    return c;
 }
-void sign_in_register(int mode)
+void get_passd(char *passd)
+{    
+  
+    char ch;
+    int i = 0,j=15;
+
+    while (j--) {
+        ch  = getch();
+        if(ch != '\n' &&  ch!=127 ) {
+            printf("*");
+            passd[i]=ch;
+            i++;
+        }
+        else if(ch == '\n'&& i!=0) {
+            passd[i]=='\0';
+            break;
+        }
+        else if(ch ==127 &&i>0) {
+            passd[--i]='\0';
+            printf("\b \b");
+        }
+
+    }
+
+}
+void sign_in_register(int mode)//暗文输入密码 
 {
     MES PACK;
     int ret;
@@ -1113,9 +1488,30 @@ void sign_in_register(int mode)
     memset(&PACK,0,sizeof(PACK));
     memset(&name,0,sizeof(name)); 
     printf("账号 :");
-    scanf("%s",PACK.num);
-    strcpy(name,PACK.num);
-  //  printf("name = %s",name);
+   // scanf("%s",PACK.num);
+    getchar();
+    int n=20;
+    int len =0;
+    
+    while(1){
+        memset(name, 0 , sizeof(name));
+        gets(name);
+        len = strlen(name);
+        printf("zhanghao :%s\n" ,name);
+        if(len <=2 ||len >=15){
+
+            printf("您输入的有误，请重新输入\n");
+            printf("账号 :");
+        }    
+        else break;
+    
+    }
+    
+    
+    
+    
+    
+    strcpy(PACK.num ,name  );
     if (mode == 1){
         printf("密码 :");
         get_passd(PACK.passd);
@@ -1127,7 +1523,7 @@ void sign_in_register(int mode)
             memset(passd , 0, sizeof (passd));
             printf("\n密码 :");
             get_passd(PACK.passd);
-            printf("密码 :");
+            printf("\n密码 :");
             get_passd(passd);
             if (strcmp (PACK.passd , passd ) == 0 )
                 break;
@@ -1167,6 +1563,7 @@ void sign_in_register(int mode)
         //client_center();
     }else if( PACK.mode==2 && PACK.state != 1) {
         printf("register failed\n");
+        sleep(2);
         system("clear");
     }
 
@@ -1182,10 +1579,16 @@ int  chose_mode()//清空缓冲区问题
 }
 int start()
 {
+    system("clear");
     int  type;
-    printf("\t\t\t\t微信\n");
-    printf("\t\t\t\t1.登录\n");
-    printf("\t\t\t\t2.注册\n");
+    printf("\n\n\n\n\n\n\t\t\t\t-------------------------------------------------------\n");
+    printf("\t\t\t\t-------------------------------------------------------\n");
+    printf("\t\t\t\t-------------------------------------------------------\n");
+    printf("\t\t\t\t------------------------微信---------------------------\n");
+    printf("\t\t\t\t-----------------------1.登录--------------------------\n");
+    printf("\t\t\t\t-----------------------2.注册--------------------------\n");
+    printf("\t\t\t\t-------------------------------------------------------\n");
+    printf("\t\t\t\t-------------------------------------------------------\n");
     
     do{
         type = chose_mode();
@@ -1239,8 +1642,6 @@ int main(int argc, char** argv)
     serv_fd = sockfd;
     start();
    
- 
-    
     close(sockfd);
     exit(0);
 }
@@ -1249,21 +1650,4 @@ int main(int argc, char** argv)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        
