@@ -1,0 +1,147 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+APPLE	client.c	/^GROUP  *APPLE = NULL;$/;"	v
+BOX	client.c	/^}BOX ;$/;"	t	typeref:struct:MES_box	file:
+Box_mes_append	client.c	/^void Box_mes_append(MES PACK)\/\/将此消息添加至消息盒子$/;"	f
+GROUP	client.c	/^}GROUP ;$/;"	t	typeref:struct:group_nam	file:
+HEAD	client.c	/^BOX  *HEAD = NULL;$/;"	v
+MAXLINE	client.c	27;"	d	file:
+MAXLINE	server.c	18;"	d	file:
+MES	client.c	/^}MES;$/;"	t	typeref:struct:message	file:
+MES	server.c	/^}MES;$/;"	t	typeref:struct:message	file:
+MES_box	client.c	/^typedef struct MES_box{$/;"	s	file:
+PACK	client.c	/^    MES PACK;$/;"	m	struct:MES_box	file:
+USA	client.c	/^}USA;$/;"	t	typeref:struct:User_list	file:
+USA	server.c	/^}USA;$/;"	t	typeref:struct:User_list	file:
+User_list	client.c	/^typedef struct User_list$/;"	s	file:
+User_list	server.c	/^typedef struct User_list$/;"	s	file:
+add_list	client.c	/^void add_list(char *num)\/\/添加至好友列表$/;"	f
+add_list	server.c	/^void add_list(char *name,int  connfd)$/;"	f
+chat_to_group	client.c	/^void  chat_to_group()\/\/在群聊天 $/;"	f
+chat_to_one	client.c	/^void chat_to_one()$/;"	f
+chose_mode	client.c	/^int  chose_mode()\/\/清空缓冲区问题$/;"	f
+client	server.c	/^void*  client(void *arg)$/;"	f
+client_center	client.c	/^void client_center()$/;"	f
+conn	server.c	/^MYSQL *conn;$/;"	v
+create_friend_table	server.c	/^void  create_friend_table(char *name)$/;"	f
+create_group	client.c	/^void create_group ()$/;"	f
+create_message_log	server.c	/^void  create_message_log(char *fri_1,char *fri_2)\/\/添加好友后创建聊天记录的表格$/;"	f
+del_fd	server.c	/^void    del_fd(int   connfd)\/\/将次节点从登录链表中删除$/;"	f
+delete_friend_center	client.c	/^void delete_friend_center()\/\/好友删除$/;"	f
+delete_friend_center	server.c	/^void delete_friend_center(MES PACK)\/\/删除好友$/;"	f
+delete_member	server.c	/^void delete_member(char *group_name,char *mem_name)\/\/踢成员$/;"	f
+detail	client.c	/^        char detail[255];    $/;"	m	struct:message	file:
+detail	server.c	/^        char detail[255];\/\/消息内容    $/;"	m	struct:message	file:
+fd	server.c	/^    int fd;$/;"	m	struct:User_list	file:
+file_center	client.c	/^void  file_center()$/;"	f
+file_center	server.c	/^void file_center(MES PACK)$/;"	f
+flag	client.c	/^    int  flag;$/;"	m	struct:MES_box	file:
+fri_repeat	client.c	/^int  fri_repeat(char *name)\/\/判断好友重复$/;"	f
+friend_append	server.c	/^void friend_append(char*fri_1 ,char*fri_2 )\/\/添加好友的处理$/;"	f
+friend_list_init	client.c	/^int  friend_list_init(MES PACK)\/\/更新好友列表$/;"	f
+friend_list_init	server.c	/^void  friend_list_init(int connfd)\/\/发送好友列表$/;"	f
+friend_request	client.c	/^void  friend_request(MES PACK)\/\/好友请求的处理$/;"	f
+from	client.c	/^        char from[20];$/;"	m	struct:message	file:
+from	server.c	/^        char from[20];$/;"	m	struct:message	file:
+get_group_chat	client.c	/^void get_group_chat(MES PACK)\/\/获取群聊天信息 $/;"	f
+get_one_chat	client.c	/^void get_one_chat(MES PACK)\/\/获取私聊聊天内容 $/;"	f
+get_passd	client.c	/^void get_passd(char *passd)$/;"	f
+getch	666/mima.c	/^char getch()$/;"	f
+getch	client.c	/^char getch()$/;"	f
+group_add_list	client.c	/^void group_add_list(char *name,char *host)\/\/添加至QUN列表$/;"	f
+group_all_member	server.c	/^char group_all_member(MES PACK)\/\/向所有群成员发消息$/;"	f
+group_chat	client.c	/^void group_chat()\/\/主动群聊天$/;"	f
+group_create_mes_log	server.c	/^void  group_create_mes_log(char* from,char* group_name)\/\/为此成员创建群聊天记录的表格$/;"	f
+group_create_table	server.c	/^void group_create_table(char* from,char* group_name) \/\/ 创建群成员表格 并将群主加入表内$/;"	f
+group_dismiss	client.c	/^void  group_dismiss() \/\/ 解散群\/\/只有群主才能解散$/;"	f
+group_dismiss	server.c	/^void  group_dismiss(char *group_name,char *from,char *to )\/\/解散群$/;"	f
+group_friend_append	server.c	/^void  group_friend_append(char* from,char *group_name)\/\/添加好友至群列表中  $/;"	f
+group_host	client.c	/^    char group_host[20];\/\/群主名称$/;"	m	struct:group_nam	file:
+group_list_init	client.c	/^int  group_list_init(MES PACK)\/\/更新QUN列表$/;"	f
+group_list_init	server.c	/^void  group_list_init(int connfd)\/\/发送QUN列表$/;"	f
+group_member_delete	client.c	/^void group_member_delete()$/;"	f
+group_member_management	client.c	/^void  group_member_management()$/;"	f
+group_nam	client.c	/^typedef struct group_nam{$/;"	s	file:
+group_name	client.c	/^    char group_name[20];$/;"	m	struct:group_nam	file:
+group_request	client.c	/^void  group_request(MES PACK)\/\/请求的处理$/;"	f
+group_request	server.c	/^void  group_request(MES PACK)\/\/处理 群添加请求$/;"	f
+group_select_friend	client.c	/^void  group_select_friend()\/\/选择进入群聊的好友$/;"	f
+group_talk	client.c	/^void  group_talk ()\/\/发起群聊$/;"	f
+head	client.c	/^USA *head= NULL;$/;"	v
+head	server.c	/^USA *head= NULL;$/;"	v
+host	client.c	/^        char host[20];\/\/群主名称$/;"	m	struct:message	file:
+host	server.c	/^        char host[20];$/;"	m	struct:message	file:
+host_judge	client.c	/^int host_judge() \/\/群主判断$/;"	f
+leave_mess	server.c	/^void  leave_mess(int  connfd,char *name )\/\/离线消息的处理$/;"	f
+list_friend_add	client.c	/^void list_friend_add()$/;"	f
+logout	client.c	/^void logout(void)$/;"	f
+logout	server.c	/^void logout(int connfd)$/;"	f
+main	666/mima.c	/^int main (){$/;"	f
+main	client.c	/^int main(int argc, char** argv)$/;"	f
+main	server.c	/^int main(int argc, char** argv)$/;"	f
+match	server.c	/^int  match(MES *a,int connfd)\/\/登录，注册的处理$/;"	f
+mem_name	client.c	/^        char mem_name[20];\/\/群成员姓名$/;"	m	struct:message	file:
+mem_name	server.c	/^        char mem_name[20];\/\/群成员姓名$/;"	m	struct:message	file:
+mess_box_center	client.c	/^void mess_box_center()\/\/消息盒子处理中心$/;"	f
+mess_box_solve	client.c	/^void  mess_box_solve()\/\/消息执行$/;"	f
+mess_box_view	client.c	/^void mess_box_view()\/\/消息盒子预览$/;"	f
+message	client.c	/^typedef struct message$/;"	s	file:
+message	server.c	/^typedef struct message$/;"	s	file:
+message_select_fri	client.c	/^int   message_select_fri(void)\/\/选择好友$/;"	f
+mode	client.c	/^        int mode;\/\/模式$/;"	m	struct:message	file:
+mode	server.c	/^        int mode;\/\/模式$/;"	m	struct:message	file:
+mun	client.c	/^        int  mun;$/;"	m	struct:message	file:
+mun	server.c	/^        int mun;$/;"	m	struct:message	file:
+my_err	client.c	/^void my_err(const char *err_string,int line)$/;"	f
+my_err	server.c	/^void my_err(const char *err_string,int line)$/;"	f
+my_group_append	server.c	/^void my_group_append(char *from,char *group_name)\/\/将此群添加至我的群列表中$/;"	f
+my_num	client.c	/^char my_num[20];$/;"	v
+n	client.c	/^    int   n;$/;"	m	struct:User_list	file:
+n	client.c	/^    int  n;$/;"	m	struct:MES_box	file:
+n	client.c	/^    int  n;$/;"	m	struct:group_nam	file:
+next	client.c	/^    struct  MES_box  *next;$/;"	m	struct:MES_box	typeref:struct:MES_box::MES_box	file:
+next	client.c	/^    struct  group_nam  *next;$/;"	m	struct:group_nam	typeref:struct:group_nam::group_nam	file:
+next	client.c	/^    struct User_list *next;$/;"	m	struct:User_list	typeref:struct:User_list::User_list	file:
+next	server.c	/^    struct User_list *next;$/;"	m	struct:User_list	typeref:struct:User_list::User_list	file:
+num	client.c	/^        char num[20];\/\/账号$/;"	m	struct:message	file:
+num	client.c	/^    char num[20];$/;"	m	struct:User_list	file:
+num	server.c	/^        char num[20];\/\/账号$/;"	m	struct:message	file:
+num	server.c	/^    char num[20];$/;"	m	struct:User_list	file:
+online	client.c	/^int  online = 1;$/;"	v
+online_fri	server.c	/^int  online_fri(char* num)\/\/根据用户ID号进性查询好友是否在线并返回套接字$/;"	f
+only_recv	client.c	/^void only_recv(void)$/;"	f
+passd	client.c	/^        char passd[20];$/;"	m	struct:message	file:
+passd	server.c	/^        char passd[20];$/;"	m	struct:message	file:
+private_chat	client.c	/^void  private_chat()$/;"	f
+private_chat	server.c	/^void  private_chat(MES PACK)\/\/私聊处理哦$/;"	f
+recv_file	client.c	/^int  recv_file(MES PACK)\/\/保存文件$/;"	f
+save_in_mysql	server.c	/^void  save_in_mysql(MES PACK)\/\/保存离线消息$/;"	f
+save_message_log	server.c	/^void   save_message_log (MES PACK)\/\/保存聊天记录$/;"	f
+search_friend	client.c	/^void search_friend()\/\/添加好友大功能$/;"	f
+search_friend	server.c	/^int  search_friend(char * num)\/\/ 在数据库中查找是否有这个用户$/;"	f
+search_friend_add	server.c	/^void search_friend_add(MES PACK)\/\/对添加好友请求而的处理的函数$/;"	f
+select_file_to_friend	client.c	/^void   select_file_to_friend()$/;"	f
+select_fri	client.c	/^int   select_fri(void)\/\/选择好友进行聊天$/;"	f
+select_group	client.c	/^int   select_group(void)\/\/选择群序号进行聊天$/;"	f
+select_message_log	server.c	/^void  select_message_log(MES PACK,int connfd)\/\/读取私聊聊天记录$/;"	f
+select_name	server.c	/^char *select_name(int fd)$/;"	f
+send_file	client.c	/^int send_file(int fd,char *friend_name,char *file_name )\/\/发送文件函数$/;"	f
+send_num	client.c	/^char send_num[20];\/\/$/;"	v
+serv_fd	client.c	/^int serv_fd;\/\/$/;"	v
+server_center	server.c	/^void server_center(int  connfd)$/;"	f
+show_fri_list	client.c	/^void  show_fri_list()\/\/打印好友列表$/;"	f
+show_group_list	client.c	/^void show_group_list()$/;"	f
+show_group_member	client.c	/^void  show_group_member() \/\/群成员展示$/;"	f
+show_group_member	server.c	/^void  show_group_member (int connfd,char *group_name)\/\/群成员展示$/;"	f
+sign_in_register	client.c	/^void sign_in_register(int mode)\/\/暗文输入密码 $/;"	f
+start	client.c	/^int start()$/;"	f
+state	client.c	/^        int state;\/\/状态$/;"	m	struct:message	file:
+state	server.c	/^        int state;\/\/状态$/;"	m	struct:message	file:
+time_mes	client.c	/^        char  time_mes[100];$/;"	m	struct:message	file:
+time_mes	server.c	/^        char  time_mes[100];$/;"	m	struct:message	file:
+to	client.c	/^        char to[20];$/;"	m	struct:message	file:
+to	server.c	/^        char to[20];$/;"	m	struct:message	file:
