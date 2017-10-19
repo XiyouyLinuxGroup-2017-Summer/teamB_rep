@@ -1119,7 +1119,7 @@ int  match(MES *a,int connfd)//登录，注册的处理
     memcpy(num,PACK.num,sizeof(PACK.num));
     memcpy(passd,PACK.passd,sizeof(PACK.passd));
     //初始化连接句柄
-    conn = mysql_init(NULL);
+    con = mysql_init(NULL);
     if(conn == NULL) { //如果返回NULL说明初始化失败
         printf("mysql_init failed!\n");
         return 0;

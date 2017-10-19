@@ -86,7 +86,7 @@ void Horsepath(int s_x,int s_y)
         while(position < 9  && flag ==0 ){
             
             position++;
-           // printf("position=%d\n",position);
+            printf("position=%d\n",position);
             switch(position){
                 case 1:
                     i=Top->next->i-2;
@@ -133,11 +133,10 @@ void Horsepath(int s_x,int s_y)
         }
 
     }
-}
 int  main ()
 {
     int i,j;
-    Horsepath(1,1);
+    Horsepath(0,0);
     for(i=0;i<6;i++){
         for(j=0;j<6;j++)
             printf("%-2d ",qipan[i][j]);

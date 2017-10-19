@@ -85,9 +85,9 @@ nizhi(he);
 nizhi(s1);
 nizhi(s2);
 if(jw==1)
-printf("case %d:\n%s + %s = 1%s",num,s1,s2,he);
+printf("Case %d:\n%s + %s = 1%s",num,s1,s2,he);
 else 
-printf("case %d:\n%s + %s = %s",num,s1,s2,he);
+printf("Case %d:\n%s + %s = %s",num,s1,s2,he);
 
 }
 

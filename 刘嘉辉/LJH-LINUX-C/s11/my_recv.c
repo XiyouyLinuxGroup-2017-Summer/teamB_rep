@@ -44,7 +44,7 @@ int  my_recv(int conn_fd , char *date_buf, int  len  )
     // 从自定义缓冲区中读取一次数据
     for (i =0 ; *pread != '\n'; i++)
     {
-        if (i > len )    return  -1;
+        if (i> len )    return  -1;
         date_buf[i] = *pread++;
         len_remain--;
     }

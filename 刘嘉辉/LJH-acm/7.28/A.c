@@ -7,7 +7,7 @@
 
 #include<stdio.h>
 int  dir[8][2]={{-1.-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1} };  //包含八个方向  
-char gird[101][101];  // 
+char gird[105][105];  // 
 int  n,m;   //计数
 
 void dfs(int x, int y)
@@ -18,26 +18,28 @@ void dfs(int x, int y)
         xx = x + dir[i][0];
         yy = y + dir[i][1];
         
-        if (xx<0 || yy< 0|| xx>= n || yy >= m )  continue;
-        if (gird[xx][yy] == '@')   dfs(xx,yy);
+        if (xx<0 || yy< 0|| xx>= m || yy >= n || gird[xx][yy] == '*'  )  continue;
+        if (gird[xx][yy] == '@') {
+            gird[xx][yy]='*';
+            dfs(xx,yy);
+
+        }
     }
 }
-
-
-
-
-
 int main ()
 {
     int  i,j;
     int cnt=0;
-    while( scanf ("%d %d",&n,&m) &&  m   ){
+    while( scanf ("%d %d",&m,&n),  m   ){
         cnt = 0;
-        for (i=0;i<n;i++)  scanf("%s",gird[i]);
+        for (i=0;i<m;i++) {
+            for(j=0;j<n;j++) {
+                scanf(" %c", &gird[i][j]);
+            }
+        }
         
-        for(i=0;i<n;i++)
-            
-            for(j=0; j<m; j++){
+        for(i=0;i<m;i++)
+            for(j=0; j<n; j++){
                 if(gird[i][j] == '@')  
                 {
                     dfs(i, j);

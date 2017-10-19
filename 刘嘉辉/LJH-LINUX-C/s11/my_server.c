@@ -4,7 +4,7 @@
 #include<sys/types.h>
 #include<sys/socket.h>
 #include<unistd.h>
-#include<netinet/in.h>
+#include<netinet/in.h> 
 #include<arpa/inet.h>
 #include<errno.h>
 #include"my_recv.h" //自定义的头文件
@@ -54,7 +54,7 @@ int find_name(const char *name)
 //发送数据
 void send_data(int conn_fd,const char *string)
 {
-    if(send(conn_fd,string,strlen(string),0)<0){
+    if(send(conn_fd,string,strlen(string),0)<0){// fd 是一个已连接的套接口的描述字
         my_err("send",__LINE__);
     }
 }
@@ -73,13 +73,13 @@ int main(void)
     char recv_buf[128];
 
     //创建一个套接字
-    sock_fd = socket(AF_INET,SOCK_STREAM,0);
+    sock_fd = socket(AF_INET,SOCK_STREAM,0);// 协议   套接字类型
     if(sock_fd<0){
         my_err("socket",__LINE__);
     }
 
     //设置该套接字可以重新绑定接口
-    optval = 1;
+    optval = 1;           //通用套接字类型
     if(setsockopt(sock_fd,SOL_SOCKET,SO_REUSEADDR,(void *)&optval,sizeof(int))<0){
         my_err("setsocket",__LINE__);
     }
@@ -109,7 +109,7 @@ int main(void)
         if(conn_fd < 0){
             my_err("accept",__LINE__);
         }
-
+                        
         printf("accept a new client,ip is %s \n",inet_ntoa(cli_addr.sin_addr));
         
         //创建一个子进程来处理刚刚接收的连接请求
@@ -122,7 +122,7 @@ int main(void)
                 recv_buf[ret-1] = '\0';  // 数据结束标致转换为字符串结束标致
                     
                 printf("%s\n",recv_buf);
-
+                                                                
                 if(flag_recv == USERNAME){
                     name_num = find_name(recv_buf);
                     switch(name_num){
@@ -148,6 +148,10 @@ int main(void)
                     else
                         send_data(conn_fd,"n\n");
                 }
+            //发送信息    
+                
+                    
+            printf("con===%d===sock=%d",conn_fd,sock_fd );    
             }
             close(sock_fd);
             close(conn_fd);

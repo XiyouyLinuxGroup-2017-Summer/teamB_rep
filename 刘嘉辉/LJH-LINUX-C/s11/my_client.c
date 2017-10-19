@@ -46,7 +46,7 @@ void  input_userinfo (int  conn_fd, const char *string)
     //输入用户信息知道正确为止  
     do {
         printf("%s: ", string);
-        if (get_userinfo(input_userinfo, 32)  < 0 ) {
+        if (get_userinfo(input_buf, 32)  < 0 ) {
             printf("error  return  from get_userinfo\n");
             exit(1);
         }
@@ -78,24 +78,24 @@ int  main (int  argc  , char  **argv)
     int  ret;
     int  conn_fd;
     int  serv_port;
-    struct socket_in ser_addr ;
+    struct sockaddr_in serv_addr ;
     char    recv_buf[BUFSIZE];
 
-    if (argc != 5)
+  /*  if (argc != 5)
     {
         printf(" NONON");
         exit(1);
-    }
+    }*/
 
 
 
     //初始化 服务器端地址结构
     memset (&serv_addr, 0, sizeof (struct sockaddr_in));
      serv_addr.sin_family = AF_INET;
-    //从命令行获取服务妻端的端口与地址 
+/*    //从命令行获取服务妻端的端口与地址 
     for (i =1; i< argc  ;i++)
     {
-        if (strcmp ("-p", argv[i] == 0 )){
+        if (strcmp ("-p", argv[i] ) == 0 ){
             serv_port = atoi(argv [ i+1 ]);
             if (serv_port < 0 || serv_port > 65535) {
                 printf("INVALID_   serv  addr sin port\n");
@@ -115,9 +115,15 @@ int  main (int  argc  , char  **argv)
         
         }
     }
+*/
+    serv_port = atoi ("4507");
+    serv_addr.sin_port = htons(serv_port);
+
+    inet_aton ("127.0.0.1", &serv_addr.sin_addr );
 
     //检测是否少输入了某项参数
-    if (serv_addr.sin_port == 0|| serv_addr.sin_addr.s_addr == 0 )
+ //  printf("0x%x,,,%u", serv_port, serv_addr.sin_addr ) ;
+   if (serv_addr.sin_port == 0|| serv_addr.sin_addr.s_addr == 0 )
     {
         printf("ccccccc\n");
         exit(1);
@@ -136,10 +142,10 @@ int  main (int  argc  , char  **argv)
     input_userinfo(conn_fd,"username");
     input_userinfo(conn_fd, "password");
     //读取欢迎信息并打印出来
-    if ((ret = recv(conn_fd, recv_buf, sizeof(recv_buf))) <0  ) {
+   /* if ((ret = my_recv(conn_fd, recv_buf, sizeof(recv_buf))) < 0  ) {
         printf("date is too long");
         exit(0);
-    }
+    }*/
     for (i=0; i< ret  ; i++)
     {
         printf("%c", recv_buf[i]);
@@ -150,25 +156,4 @@ int  main (int  argc  , char  **argv)
     return  0;
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

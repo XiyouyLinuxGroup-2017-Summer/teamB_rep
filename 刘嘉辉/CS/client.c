@@ -252,13 +252,6 @@ void  friend_request(MES PACK)//好友请求的处理
         head ->next = ptr;
     }
 
-
-
-
-
-
-
-
     printf("你的选择是sel ===%d",PACK.state);
     strcpy( str, PACK.from);
     memset( &PACK.from, 0, sizeof(PACK.from));
@@ -394,23 +387,23 @@ void search_friend()//添加好友大功能
 void list_friend_add()
 {
     system("clear");
-    printf("1.摇一摇\n");
-    printf("2.扫一扫\n");
-    printf("3.返回主界面");
+   // printf("1.摇一摇\n");
+    printf("1.扫一扫\n");
+    printf("2.返回主界面");
     int  sel;
     do{
         sel = chose_mode();
-    }while(sel<1||sel>3);
+    }while(sel<1||sel>2);
     switch(sel){
-        case 1:
+       // case 1:
             // list_all();
-            list_friend_add();
-            break;
-        case 2:
+         //   list_friend_add();
+          //  break;
+        case 1:
             search_friend();
             list_friend_add();
             break;
-        case 3:
+        case 2:
             break;
     }
 }
@@ -1409,6 +1402,9 @@ void client_center()
         break;
     case 5:
         //背景音乐
+        
+        system("netease-cloud-music");
+        
         client_center();
         break;
     case 6:

@@ -1,0 +1,32 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BUFSIZE	my_recv.h	10;"	d
+INVALID_USERINFO	my_client.c	19;"	d	file:
+INVALID_USERINFO	my_server.c	15;"	d	file:
+LISTENQ	my_server.c	13;"	d	file:
+MY_RECV_C	my_recv.c	7;"	d	file:
+PASSWORD	my_server.c	19;"	d	file:
+SERV_PORT	my_server.c	12;"	d	file:
+USERNAME	my_server.c	18;"	d	file:
+VALID_USERINFO	my_client.c	20;"	d	file:
+VALID_USERINFO	my_server.c	16;"	d	file:
+_MY_RECV_H	my_recv.h	9;"	d
+display_time	select.c	/^void display_time(const char *string)$/;"	f
+find_name	my_server.c	/^int find_name(const char *name)$/;"	f
+get_userinfo	my_client.c	/^int  get_userinfo (char *buf, int  len )$/;"	f
+input_userinfo	my_client.c	/^void  input_userinfo (int  conn_fd, const char *string)$/;"	f
+main	my_client.c	/^int  main (int  argc  , char  **argv)$/;"	f
+main	my_server.c	/^int main(void)$/;"	f
+main	select.c	/^int main(void)$/;"	f
+main	test_address.c	/^int main ()$/;"	f
+my_err	my_recv.c	/^void  my_err (const char  *err_string, int  line)$/;"	f
+my_recv	my_recv.c	/^int  my_recv(int conn_fd , char *date_buf, int  len  )$/;"	f
+password	my_server.c	/^    char password[32];$/;"	m	struct:userinfo	file:
+send_data	my_server.c	/^void send_data(int conn_fd,const char *string)$/;"	f
+userinfo	my_server.c	/^struct userinfo{$/;"	s	file:
+username	my_server.c	/^    char username[32];$/;"	m	struct:userinfo	file:
+users	my_server.c	/^struct userinfo users[] = {$/;"	v	typeref:struct:userinfo
